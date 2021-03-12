@@ -132,11 +132,12 @@ be renamed.
                                 a sparse feature matrix. The feature selection and parameters
                                 are controlled by `features_extraction/features.json`.
 ----
+
 # Credits and License
 
-Copyright © 2021 Dino Bollinger
+__Copyright © 2021 Dino Bollinger__
 
-MIT License, see included LICENSE file
+__MIT License, see included LICENSE file__
 
 This repository uses the XGBoost, LightGBM and CatBoost algorithms, as well as Tensorflow.
 
@@ -151,7 +152,7 @@ and is part of a series of repositories for the __CookieBlock__ browser extensio
 
 https://github.com/dibollinger/CookieBlock
 
-Thanks go to:
+__Thesis Supervision and Assistance:__
 * Karel Kubicek
 * Dr. Carlos Cotrini
 * Prof. Dr. David Basin
