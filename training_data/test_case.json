@@ -1,0 +1,62 @@
+{ "CookieA":
+  {
+    "visit_id": 1,
+    "name": "gat_enabled_serve",
+    "domain": "example.com",
+    "path": "/test",
+    "first_party_domain": "addthis.com",
+    "label": 0,
+    "cmp_origin": 0,
+    "variable_data":
+    [
+      {
+        "value": "testestest",
+        "expiry": 186129,
+        "session": false,
+        "http_only": false,
+        "host_only": true,
+        "secure": false,
+        "same_site": "no_restriction"
+      },
+      {
+        "value": "{stamp:%27lghF1qgAVoeSaBiNvzjn1okwa8EB47Kkn3pnuSvdp6OTrdIa3TO77A==%27%2Cnecessary:true%2Cpreferences:true%2Cstatistics:true%2Cmarketing:true%2Cver:1%2Cutc:1606342603222%2Cregion:%27nl%27}",
+        "expiry": 186399,
+        "session": true,
+        "http_only": true,
+        "host_only": false,
+        "secure": true,
+        "same_site": "lax"
+      },
+      {
+        "value": "{}",
+        "expiry": 186000,
+        "session": false,
+        "http_only": false,
+        "host_only": true,
+        "secure": false,
+        "same_site": "strict"
+      }
+    ]
+  },
+  "CookieB":
+  {
+    "visit_id": 1,
+    "name": "IDE",
+    "domain": ".doubleclick.net",
+    "path": "/", "first_party_domain": "http://101soundstudios.gr/",
+    "label": 3,
+    "cmp_origin": 0,
+    "variable_data":
+    [
+      {
+        "value": "AHWqTUnpr7YauQTWB_8THFJgKhGhPikIIczo_G8voAtLTBTKg0ct-Hk2OTbcjeYK",
+        "expiry": 33695999,
+        "session": false,
+        "http_only": true,
+        "host_only": false,
+        "secure": true,
+        "same_site": "no_restriction"
+      }
+    ]
+  }
+}
