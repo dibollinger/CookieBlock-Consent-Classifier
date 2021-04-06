@@ -1,10 +1,9 @@
 # Cookie Consent Classifier
-This repository contains a collection of scripts to train machine learning classifiers on cookie data. 
-It forms the basis of the classifier included 
+This repository contains a collection of scripts to train machine learning classifiers on cookie data.
 
+This includes both feature extraction for cookies, as well as the classifier scripts.
+ 
 Implemented are XGBoost, LightGBM, CatBoost and a simple Recurrent Neural Network.
-
-Also includes the feature extraction scripts to create the sparse input matrix.
 
 # Training a Classifier
 
@@ -22,24 +21,22 @@ script in the following repository: https://github.com/dibollinger/CookieBlock-O
 All components relevant for the feature extraction are stored in the subfolder 
 `feature_extraction/`.
 
-To extract data with labels for the purpose of training a classifier, run the script 
-`prepare_training_data.py`. The resulting data matrix will be stored in the subfolder 
-`processed_features/`.
-
 ### Usage
+To extract data with labels for the purpose of training a classifier, run the script 
+`prepare_training_data.py` with the desired inputs. The resulting data matrix will be 
+stored in the subfolder `processed_features/`.
+
     prepare_training_data.py <tr_data>... [--format <FORMAT>] [--out <OFPATH>]
     Options:
         -f --format <FORMAT>   Output format. Options: {libsvm, sparse, debug. xgb} [default: sparse]
         -o --out <OFPATH>      Filename for the output. If not specified, will reuse input filename.
-        -h --help              Show this help message.
 
-Results can be output as either libsvm text format, as a pickled sparse matrix,
+The results can be output as either libsvm text format, as a pickled sparse matrix,
 or in the form of an XGB data matrix. In either case, the script also produces a list of labels, weights
 and feature names. For the XGB output these are already integrated into the binary, while for the other formats
 they are output as separate files.
 
-
-### Expected JSON Format
+### JSON Cookie Format
 
 The data for each cookie is expected to be stored as a JSON object, with the name, domain and path forming
 the key `cookie_id`. Each entry is structured as follows:
@@ -116,28 +113,28 @@ This contains a compressed representation of the tree model that can be read by 
 extension and used to make decision. Each file corresponds to a specific class and should not 
 be renamed. 
 
-#Repository Contents
+# Repository Contents
+
 * `./classifiers/`: Contains python scripts to train the various classifier types.
+    - `./classifiers/xgboost/`: XGBoost-specific scripts. Includes training, feature importance and model extraction.
     - `./classifiers/catboost/`: Scripts that use the "CatBoost" approach.
     - `./classifiers/lightgbm/`: Scripts that use the "LightGBM" approach.
     - `./classifiers/neural_networks/`: Tensorflow neural network scripts.
-    - `./classifiers/xgboost/`: XGBoost-specific scripts. Includes training, feature importance and model extraction.
 * `./feature_extraction/`: Contains all python code needed for feature extraction.
 * `./feature_extraction/features.json`: Configuration where one can define, configure, enable or disable individual features.
 * `./processed_features/`: Directory where the extracted feature matrices are stored.
 * `./resources/`: Contains external resources used for the feature extraction.
 * `./training_data/`: Contain some examples for the JSON-formatted training data.
 * `./predict_class.py`: Using a previously constructed classifier model, and given JSON cookie data as input, predicts labels for each cookie.
-* `./prepare_training_data.py`: Script to transform input cookie data (in JSON format) into 
-                                a sparse feature matrix. The feature selection and parameters
-                                are controlled by `features_extraction/features.json`.
-----
+* `./prepare_training_data.py`: Script to transform input cookie data (in JSON format) into a sparse feature matrix. The feature selection and parameters are controlled by `features_extraction/features.json`.
 
-# Credits and License
+# License
 
 __Copyright © 2021 Dino Bollinger__
 
 __MIT License, see included LICENSE file__
+
+----
 
 This repository uses the XGBoost, LightGBM and CatBoost algorithms, as well as Tensorflow.
 
@@ -147,10 +144,24 @@ They can be found at:
 * __CatBoost:__ https://github.com/catboost
 * __Tensorflow:__ https://www.tensorflow.org/
 
-The scripts in this repository were created as part of a master thesis on GDPR Compliance, 
-and is part of a series of repositories for the __CookieBlock__ browser extension:
+----
+# License
 
-https://github.com/dibollinger/CookieBlock
+Copyright (c) 2021, Dino Bollinger
+
+This project is released under the BSD 3-clause license, see the included LICENSE file.
+
+----
+
+The scripts in this repository were created as part of the master thesis *"Analyzing Cookies Compliance with the GDPR*, 
+and is part of a series of repositories for the __CookieBlock__ browser extension.
+
+__Related Repositories:__
+* CookieBlock: https://github.com/dibollinger/CookieBlock
+* Final Crawler: https://github.com/dibollinger/CookieBlock-Consent-Crawler
+* Cookie Classifier: https://github.com/dibollinger/CookieBlock-Consent-Classifier
+* Violation Detection & More: https://github.com/dibollinger/CookieBlock-Other-Scripts 
+* Collected Data: https://drive.google.com/drive/folders/1P2ikGlnb3Kbb-FhxrGYUPvGpvHeHy5ao
 
 __Thesis Supervision and Assistance:__
 * Karel Kubicek
