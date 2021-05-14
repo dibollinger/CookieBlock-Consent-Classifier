@@ -6,7 +6,7 @@ To be used with XGBoost, LightGBM or Catboost.
 Can be used to optimize the decision rule used for predicting labels using the soft probabilities.
 
 Usage:
-    validation_stats_xgb <model> <valid_set> [--matrix_only] [--feat_contribs]
+    validation_stats.py <model> <valid_set> [--matrix_only] [--feat_contribs]
 
 Options:
     -f --feat_contribs   Compute the feature contributions prediction (takes some time)
@@ -16,12 +16,15 @@ Options:
 
 import numpy as np
 import xgboost as xgb
+import catboost as catb
+import lightgbm as lgbm
 import pickle
 import os
 from docopt import docopt
 from datetime import datetime
 
-from shared.utils import (setupLogger, bayesian_decision, log_accuracy_and_confusion_matrix, get_optimized_loss_weights)
+from utils import (setupLogger, bayesian_decision, log_accuracy_and_confusion_matrix)
+from train_xgb import (analyse_feature_contribs, log_validation_statistics)
 
 import logging
 
@@ -31,9 +34,6 @@ logger = logging.getLogger("classifier")
 def main() -> int:
     """  """
     argv = None
-    argv = ["js_feats_24_04_1525/models/xgbmodel_20210424_152913.xgb",
-            "js_feats_24_04_1525/xgb_predict_stats/validation_matrix_20210424_152841.sparse",
-            "--matrix_only"]
     class_names = ["necessary", "functional", "analytics", "advertising"]
 
     cargs = docopt(__doc__, argv=argv)

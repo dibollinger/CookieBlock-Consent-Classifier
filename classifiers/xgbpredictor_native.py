@@ -6,7 +6,7 @@ This is used for comparison purposes with the Tree-dump based implementation of 
 The feature vector inputs are built into the code directly.
 
 Usage:
-    xgbpredictor_native <model_path>
+    xgbpredictor_native.py <model_path>
 
 """
 
@@ -19,7 +19,7 @@ import xgboost as xgb
 from typing import Tuple
 
 from docopt import docopt
-from classifiers.utils import setupLogger, bayesian_decision, get_equal_loss_weights
+from utils import setupLogger, bayesian_decision, get_equal_loss_weights
 
 logger = logging.getLogger("classifier.native_predictor")
 
@@ -81,7 +81,7 @@ def get_sample_input02() -> Tuple[int, np.ndarray]:
 def main():
     """ Perform predictions using the """
     logger.info("Predicting Labels...")
-    argv = ["../../performance_reports/xgboost_best_18_01_21/models/xgbmodel_20210119_004712.xgb"]
+    argv = None
     cargs = docopt(__doc__, argv=argv)
 
     setupLogger(None)
@@ -103,17 +103,6 @@ def main():
     logger.info(f"True Label: {true_label}")
     logger.info(f"Predicted Label: {discrete_prediction}")
 
-"""
-2021-01-22-14:02:01 :: classifier.native_predictor :: INFO :: Predicted Probabilities: [[0.9959651  0.00087502 0.00263996 0.00051984]]
-2021-01-22-14:02:01 :: classifier.native_predictor :: INFO :: True Label: 0
-2021-01-22-14:02:01 :: classifier.native_predictor :: INFO :: Predicted Label: [0]
-"""
-
-"""
-Predicted Probabilities: [0.99657413 0.00041644 0.00251869 0.00049074]
-True Label: 0
-Predicted Label: [0]
-"""
 
 
 if __name__ == "__main__":

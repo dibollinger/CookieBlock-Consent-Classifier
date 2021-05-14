@@ -4,7 +4,7 @@
 This script parses a dumped xgboost model and attempts to reimplement the predictor based on said dump.
 
 Usage:
-    xgbdump_parser <dump_json> (<validset_path>)
+    xgbpredictor_dump.py <dump_json> (<validset_path>)
 """
 
 import numpy as np
@@ -18,8 +18,8 @@ from tqdm import tqdm
 from time import perf_counter_ns
 from datetime import datetime
 
-from classifiers.utils import setupLogger, get_equal_loss_weights, bayesian_decision, log_validation_statistics
-from classifiers.xgboost.xgbpredictor_native import get_sample_input01, get_sample_input02
+from utils import setupLogger, get_equal_loss_weights, bayesian_decision, log_validation_statistics
+from xgbpredictor_native import get_sample_input01, get_sample_input02
 from docopt import docopt
 from typing import Tuple, Union, Dict, List
 

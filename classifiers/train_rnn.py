@@ -1,12 +1,12 @@
 # Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
 # Released under the MIT License
 """
-    Train a recurrent network using the Keras library, for the purpose of classifying cookies.
-    There are 4 categories: ["necessary", "functional", "analytics", "advertising"]
-    Supported modes: train, split
-    ---------------------------------
-    Usage:
-        recurrent_network.py <tr_data> <mode>
+Train a recurrent network using the Keras library, for the purpose of classifying cookies.
+There are 4 categories: ["necessary", "functional", "analytics", "advertising"]
+Supported modes: train, split
+---------------------------------
+Usage:
+    recurrent_network.py <tr_data> <mode>
 """
 import numpy as np
 
@@ -18,14 +18,13 @@ import logging
 
 from datetime import datetime
 from docopt import docopt
-from classifiers.utils import load_data
 
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from scipy.sparse import csr_matrix
 from collections import Counter
 
-from classifiers.utils import log_validation_statistics, setupLogger, save_validation
+from utils import load_data, log_validation_statistics, setupLogger, save_validation
 
 from typing import List, Optional
 

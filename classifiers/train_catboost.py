@@ -10,7 +10,7 @@ LibSVM text works too but comes with some overhead in setting up.
 <mode> is one of {"train", "split", "cross_validate", "grid_search", "random_search"}.
 
 Usage:
-    train_catboost <tr_data> <mode>
+    train_catboost.py <tr_data> <mode>
 
 Options:
     -h --help        Show this help message.
@@ -28,7 +28,7 @@ from datetime import datetime
 
 from collections import Counter
 
-from shared.utils import load_data, log_validation_statistics, setupLogger, save_validation
+from utils import load_data, log_validation_statistics, setupLogger, save_validation
 from scipy.sparse import csr_matrix
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV

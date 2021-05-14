@@ -7,7 +7,7 @@ information on the booster, such as feature importance and graphs describing ind
 If no options specified, will produce default outputs
 
 Usage:
-    booster_stats_xgb <model> <feature_map> [--split_hist <fname>] [--plot <limit>] [--plot_tree <tree>] [--feat_cont <fvals>] [--predict <vdat>]
+    xgboost_stats.py <model> <feature_map> [--split_hist <fname>] [--plot <limit>] [--plot_tree <tree>] [--feat_cont <fvals>] [--predict <vdat>]
 
 Options:
     -s --split_hist <fname>   Produce a split histogram for the specified feature name.
@@ -26,7 +26,7 @@ import logging
 
 from datetime import datetime
 from docopt import docopt
-from shared.utils import setupLogger
+from utils import setupLogger
 
 from typing import Dict, Union
 

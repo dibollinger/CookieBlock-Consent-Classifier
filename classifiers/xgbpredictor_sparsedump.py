@@ -6,7 +6,7 @@ Unlike the other script, this one does not utilize arrays, and instead expects d
 This is done to prepare for the Javascript implementation.
 
 Usage:
-    new_dump_predictor <dump_files>...
+    xgbpredictor_sparsedump.py <dump_files>...
 """
 
 import logging
@@ -16,7 +16,7 @@ import json
 from math import exp
 from time import perf_counter_ns
 
-from classifiers.utils import setupLogger
+from utils import setupLogger
 from docopt import docopt
 from typing import Tuple, Union, Dict, List
 

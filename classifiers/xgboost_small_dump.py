@@ -5,7 +5,7 @@ Given an XGBoost model, generates the JSON dump, and transforms it to reduce red
 This serves to be used inside the browser extension as a basis to generate the decision tree.
 
 Usage:
-    create_small_dump.py <model>
+    xgboost_small_dump.py <model>
 """
 
 
@@ -17,7 +17,7 @@ import json
 from docopt import docopt
 from typing import List, Dict, Union
 
-from shared.utils import setupLogger
+from utils import setupLogger
 
 logger = logging.getLogger("classifier.minimal_dump")
 
@@ -43,7 +43,6 @@ def transform_node_dict(node:Dict):
 
 def main() -> int:
     argv = None
-    argv = ["./models/xgbmodel_20210428_154050.xgb"]
     cargs = docopt(__doc__, argv=argv)
     setupLogger(None)
 

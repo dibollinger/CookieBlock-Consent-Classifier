@@ -28,7 +28,7 @@ from datetime import datetime
 
 from collections import Counter
 
-from shared.utils import load_data, log_validation_statistics, setupLogger, save_validation
+from utils import load_data, log_validation_statistics, setupLogger, save_validation
 from multiprocessing import cpu_count
 from scipy.sparse import csr_matrix
 from sklearn.model_selection import train_test_split, KFold
@@ -442,7 +442,6 @@ def paramsearch_train(X, y: List[int], weights: Optional[List[float]],
 def main() -> int:
     """ Perform training of an xgboost_other model """
     argv = None
-    argv = ["./js_feats_24_04_1525/processed.libsvm", "train", "./js_feats_24_04_1525/class_weights.txt"]
     cargs = docopt(__doc__, argv=argv)
     setupLogger(f"./train_xgb{''}.log")
 

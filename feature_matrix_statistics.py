@@ -4,7 +4,7 @@
 Takes as input a feature matrix and outputs which features are most used.
 
 Usage:
-    matrix_statistics.py <train_data> <fmap>
+    feature_matrix_statistics.py <train_data> <fmap>
 
 Options:
     -h   Help

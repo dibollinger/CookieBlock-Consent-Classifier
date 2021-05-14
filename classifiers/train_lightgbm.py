@@ -7,7 +7,7 @@ The expected training data format is libSVM or pickled sparse matrix.
 <mode> is one of {"split", "cross_validate", "grid_search", "random_search"}.
 
 Usage:
-    train_lightgbm <tr_data> <mode>
+    train_lightgbm.py <tr_data> <mode>
 
 Options:
     -h --help       Show this help message.
@@ -24,13 +24,12 @@ from datetime import datetime
 
 from collections import Counter
 
-from classifiers.utils import load_data
+from utils import load_data, log_validation_statistics, setupLogger, save_validation
 from multiprocessing import cpu_count
 from scipy.sparse import csr_matrix
 from sklearn.model_selection import train_test_split, KFold, StratifiedKFold, GridSearchCV, RandomizedSearchCV
 
 from typing import Union, Optional, List, Dict
-from classifiers.utils import log_validation_statistics, setupLogger, save_validation
 
 
 logger = logging.getLogger("classifier.lightgbm")
