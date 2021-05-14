@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# LICENSE: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
 Recompute the validation stats using the validation dataset that was split away during training.
 To be used with XGBoost, LightGBM or Catboost.
@@ -16,16 +16,12 @@ Options:
 
 import numpy as np
 import xgboost as xgb
-import catboost as catb
-import lightgbm as lgbm
 import pickle
 import os
 from docopt import docopt
 from datetime import datetime
 
-from classifiers.xgboost.train_xgb import analyse_feature_contribs
-from classifiers.utils import (log_accuracy_and_confusion_matrix, log_validation_statistics, setupLogger,
-                               get_optimized_loss_weights, bayesian_decision)
+from shared.utils import (setupLogger, bayesian_decision, log_accuracy_and_confusion_matrix, get_optimized_loss_weights)
 
 import logging
 
@@ -35,9 +31,9 @@ logger = logging.getLogger("classifier")
 def main() -> int:
     """  """
     argv = None
-    argv = ["../performance_reports/xgboost_best_18_01_21/models/xgbmodel_20210119_004712.xgb",
-            "../performance_reports/xgboost_best_18_01_21/xgb_predict_stats/validation_matrix_20210119_004617.sparse",
-            "--feat_contribs"]
+    argv = ["js_feats_24_04_1525/models/xgbmodel_20210424_152913.xgb",
+            "js_feats_24_04_1525/xgb_predict_stats/validation_matrix_20210424_152841.sparse",
+            "--matrix_only"]
     class_names = ["necessary", "functional", "analytics", "advertising"]
 
     cargs = docopt(__doc__, argv=argv)
@@ -111,7 +107,7 @@ def main() -> int:
 
         logger.info(".............................")
         logger.info("Custom Loss Function:")
-        loss_weights = get_optimized_loss_weights()
+        loss_weights = np.array([[0, 20, 20, 20], [1.0, 0, 1.0, 1.0], [1.0, 1.0, 0, 1.0], [1.0, 1.0, 1.0, 0]])
         disc_preds_bayes = bayesian_decision(predicted_probabilities, loss_weights)
         log_accuracy_and_confusion_matrix(disc_preds_bayes, true_labels, class_names)
         logger.info(f"Loss used: \n{loss_weights}")

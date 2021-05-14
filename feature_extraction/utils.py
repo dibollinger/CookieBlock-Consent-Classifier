@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# LICENSE: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 
 """ Contains static utility functions for the feature transformation process"""
 

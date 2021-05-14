@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# License: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
     Train a recurrent network using the Keras library, for the purpose of classifying cookies.
     There are 4 categories: ["necessary", "functional", "analytics", "advertising"]

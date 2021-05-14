@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# License: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
 Using a pretrained model, and given cookie data in JSON format, predict labels for each cookie.
 Can choose between the three tree boosters.
@@ -21,7 +21,7 @@ import xgboost as xgb
 import lightgbm as lgbm
 import catboost as catb
 
-from classifiers.utils import bayesian_decision, get_optimized_loss_weights
+from classifiers.shared.utils import bayesian_decision, get_optimized_loss_weights
 
 import numpy as np
 from scipy.sparse import csr_matrix

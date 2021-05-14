@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# License: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
 Train a Catboost model.
 Supported data input formats are "sparse" and "LibSVM", identified by file extension.
@@ -28,7 +28,7 @@ from datetime import datetime
 
 from collections import Counter
 
-from classifiers.utils import load_data, log_validation_statistics, setupLogger, save_validation
+from shared.utils import load_data, log_validation_statistics, setupLogger, save_validation
 from scipy.sparse import csr_matrix
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV

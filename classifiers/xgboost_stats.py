@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# License: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
 Using the given trained XGB booster model, and the provided feature map, output additional
 information on the booster, such as feature importance and graphs describing individual trees.
@@ -26,7 +26,7 @@ import logging
 
 from datetime import datetime
 from docopt import docopt
-from classifiers.utils import setupLogger
+from shared.utils import setupLogger
 
 from typing import Dict, Union
 

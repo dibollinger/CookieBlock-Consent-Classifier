@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# License: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
 Parses the new minimal format tree dumps and uses it to construct a predictor.
 Unlike the other script, this one does not utilize arrays, and instead expects dictionaries as feature input.

@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# License: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
 Given an XGBoost model, generates the JSON dump, and transforms it to reduce redundancy and lower the filesize.
 This serves to be used inside the browser extension as a basis to generate the decision tree.
@@ -17,7 +17,7 @@ import json
 from docopt import docopt
 from typing import List, Dict, Union
 
-from classifiers.utils import setupLogger
+from shared.utils import setupLogger
 
 logger = logging.getLogger("classifier.minimal_dump")
 
@@ -43,6 +43,7 @@ def transform_node_dict(node:Dict):
 
 def main() -> int:
     argv = None
+    argv = ["./models/xgbmodel_20210428_154050.xgb"]
     cargs = docopt(__doc__, argv=argv)
     setupLogger(None)
 

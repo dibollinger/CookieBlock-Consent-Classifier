@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# License: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
 Train an XGBoost model.
 Supported data input formats are "sparse", "LibSVM" and "XGB", identified by extension.
@@ -28,7 +28,7 @@ from datetime import datetime
 
 from collections import Counter
 
-from classifiers.utils import load_data, log_validation_statistics, setupLogger, save_validation
+from shared.utils import load_data, log_validation_statistics, setupLogger, save_validation
 from multiprocessing import cpu_count
 from scipy.sparse import csr_matrix
 from sklearn.model_selection import train_test_split, KFold
@@ -52,7 +52,7 @@ def get_search_params() -> Dict[str, List[Union[None, float, int, str]]]:
         'seed': [0],
 
         # Tree parameters
-        'learning_rate': [0.3],           # [0.2, 0.3, 0.4],
+        'learning_rate': [0.5],           # [0.2, 0.3, 0.4],
         'gamma': [1],                     # [0, 1, 3],  # minimum loss reduction required to further partition
         'max_depth': [7, 9],              # [5, 6, 7, 8],  # maximum tree depth
         'min_child_weight': [1, 10, 30],  # minimum sum of instance weight needed in a child
@@ -85,9 +85,9 @@ def get_best_params() -> Dict[str, Union[None, float, int, str]]:
             'nthread': int(cpu_count() - 1),
 
             # Tree parameters
-            'learning_rate': 0.3,
+            'learning_rate': 0.25,
             'gamma': 1,
-            'max_depth': 12,
+            'max_depth': 30,
             'min_child_weight': 3,
             'max_delta_step': 0,
             'subsample': 1,
@@ -111,7 +111,7 @@ def get_best_params() -> Dict[str, Union[None, float, int, str]]:
             }
 
 
-def save_model(bst: xgb.Booster) -> None:
+def save_model(bst) -> None:
     """
     Save the given booster model.
     :param bst: Computed booster.
@@ -126,7 +126,7 @@ def save_model(bst: xgb.Booster) -> None:
     logger.info(f"Model dumped to {file_path}")
 
 
-def custom_metrics(lweights: np.ndarray, data: xgb.DMatrix) -> List[Tuple[str, float]]:
+def custom_metrics(lweights: np.ndarray, data) -> List[Tuple[str, float]]:
     """
     Custom evaluation metrics:
         Currently computes the negated sum of the f1score based on the argmax probability prediction.
@@ -201,7 +201,7 @@ def analyse_feature_contribs(pred_probabilities: np.ndarray, feature_contributio
         logger.info(f"Average Feature Contributions for {class_names[i]} written to {avg_feat_path}")
 
 
-def output_validation_statistics(bst: xgb.Booster, ntree: int, compute_feat_contribs: bool,
+def output_validation_statistics(bst, ntree: int, compute_feat_contribs: bool,
                                  X_test: csr_matrix, y_test: List[int], class_names: List[str]) -> None:
     """
     Output a large number of statistics resulting from predictions on the validation set to a subfolder.
@@ -255,7 +255,7 @@ def simple_train(X: csr_matrix, y: List[int], weights: Optional[List[float]]) ->
     # train on entire dataset, save that model
     evallist = [(dtrain, 'train')]
     bst: xgb.Booster = xgb.train(params, dtrain,
-                                 num_boost_round=250, early_stopping_rounds=5,
+                                 num_boost_round=17, early_stopping_rounds=2,
                                  verbose_eval=True, evals=evallist)
 
     try:
@@ -314,8 +314,8 @@ def split_train(X: csr_matrix, y: List[int], weights: Optional[List[float]],
     evallist = [(dtrain, 'train'), (dtest, 'eval')]
 
     evals_result = dict()
-    bst: xgb.Booster = xgb.train(params, dtrain, num_boost_round=2000, early_stopping_rounds=30,
-                                 feval=custom_metrics, verbose_eval=True, evals=evallist, evals_result=evals_result)
+    bst: xgb.Booster = xgb.train(params, dtrain, num_boost_round=16, early_stopping_rounds=10,
+                                 verbose_eval=True, evals=evallist, evals_result=evals_result)
 
     # Output the information collected by early stopping
     limit: int = 0
@@ -335,7 +335,7 @@ def split_train(X: csr_matrix, y: List[int], weights: Optional[List[float]],
     save_model(bst)
 
 
-def crossvalidate_train(X: Union[csr_matrix, xgb.DMatrix], y: Optional[List[int]],
+def crossvalidate_train(X, y: Optional[List[int]],
                         weights: Optional[List[float]], random_seed: Optional[int] = None):
     """
     Perform cross-validation to measure the mean effectiveness of the classifier, then train on the entire dataset.
@@ -358,7 +358,7 @@ def crossvalidate_train(X: Union[csr_matrix, xgb.DMatrix], y: Optional[List[int]
     logger.info("Parameters:")
     logger.info(params)
 
-    cv_results = xgb.cv(params, dtrain, num_boost_round=300, nfold=5, stratified=True, metrics=["merror", "mlogloss"],
+    cv_results = xgb.cv(params, dtrain, num_boost_round=300, nfold=5, stratified=True, metrics=["mlogloss"],
                         early_stopping_rounds=5, show_stdv=True, verbose_eval=True, seed=random_seed, shuffle=True)
 
     logger.info(cv_results)
@@ -372,7 +372,7 @@ def crossvalidate_train(X: Union[csr_matrix, xgb.DMatrix], y: Optional[List[int]
     logger.info(cv_results_path)
 
 
-def paramsearch_train(X: Union[csr_matrix, xgb.DMatrix], y: List[int], weights: Optional[List[float]],
+def paramsearch_train(X, y: List[int], weights: Optional[List[float]],
                       search_type: str, random_seed: Optional[int] = None) -> None:
     """
     Perform either grid search or random search on parameters, verifying performance with 5-fold cross-validation.
@@ -442,6 +442,7 @@ def paramsearch_train(X: Union[csr_matrix, xgb.DMatrix], y: List[int], weights: 
 def main() -> int:
     """ Perform training of an xgboost_other model """
     argv = None
+    argv = ["./js_feats_24_04_1525/processed.libsvm", "train", "./js_feats_24_04_1525/class_weights.txt"]
     cargs = docopt(__doc__, argv=argv)
     setupLogger(f"./train_xgb{''}.log")
 

@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# LICENSE: MIT
+# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 """
 This file contains the class responsible for transforming cookie json data into feature vectors.
 The concept is as follows:
@@ -48,8 +48,8 @@ import pycountry
 import difflib
 from Levenshtein import distance as lev_distance
 
-from feature_extraction.utility import (load_lookup_from_csv, url_to_uniform_domain, split_delimiter_separated,
-                                        check_flag_changed, try_decode_base64, try_split_json, delim_sep_check)
+from utils import (load_lookup_from_csv, url_to_uniform_domain, split_delimiter_separated,
+                   check_flag_changed, try_decode_base64, try_split_json, delim_sep_check)
 
 # Non-essential
 import logging
@@ -137,7 +137,7 @@ class CookieFeatureProcessor:
         self._iab_europe_vendors: Optional[Set[str]] = None
 
         # This set is required to limit false positives. These are all the separators recognized as valid
-        self.valid_csv_delimiters: str = ",|#:;&"
+        self.valid_csv_delimiters: str = ",|#:;&_"
 
         # Strings that identify boolean values.
         self.truth_values: re.Pattern = re.compile(r"\b(true|false|yes|no|0|1|on|off)\b", re.IGNORECASE)
@@ -632,7 +632,7 @@ class CookieFeatureProcessor:
     def setup_name_features(self, source: str, vector_size: int) -> None:
         """
         Loads a list of name features which may be present inside the cookie name.
-        :param source: Path to the source file 
+        :param source: Path to the source file
         :param vector_size: Number of features to use.
         """
         self._name_features: List[Tuple[re.Pattern, int]] = list()

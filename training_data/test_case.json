@@ -43,7 +43,8 @@
     "visit_id": 1,
     "name": "IDE",
     "domain": ".doubleclick.net",
-    "path": "/", "first_party_domain": "http://101soundstudios.gr/",
+    "path": "/",
+    "first_party_domain": "",
     "label": 3,
     "cmp_origin": 0,
     "variable_data":
