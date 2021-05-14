@@ -1,11 +1,68 @@
-# Cookie Consent Classifier
-This repository contains a collection of scripts to train machine learning classifiers on cookie data.
+# CookieBlock Consent Classifier
+* [Description](#description)
+* [Repository Contents](#repository-contents)
+  * [Additional Details](#additional-details)
+* [Credits](#credits)
+* [License](#license)
+
+## Description
+
+This repository contains a collection of scripts to train machine learning classifiers on cookie data. 
 
 This includes both feature extraction for cookies, as well as the classifier scripts.
  
 Implemented are XGBoost, LightGBM, CatBoost and a simple Recurrent Neural Network.
 
-# Training a Classifier
+Also includes the feature extraction scripts to create the sparse input matrix.
+
+## Requirements
+
+The required libraries are listed inside `requirements.txt` placed in the base folder.
+
+In order to perform the feature extraction, some resource files are needed. Default files
+are provided within the folder `resources/`, but these can be recomputed as desired through
+the scripts located in the folder `resource_construction/`. For more information on the contents
+of this folder, see [here](resource_construction/README.md).
+
+### Input Format
+
+The input data for each cookie is expected to be stored as a JSON object, with the name, domain 
+and path forming the key `cookie_id`. Each entry is structured as follows:
+```json
+{
+ "cookie_id": {
+   "name": "<name>",
+   "domain": "<domain>",
+   "path": "/path",
+   "first_party_domain": "http://first-party-domain",
+   "label": 0,
+   "cmp_origin": 0,
+    "variable_data": [
+     {
+     "value": "<cookie content>",
+     "expiry": "<expiration in seconds>",
+     "session": "<true/false>",
+     "http_only": true,
+     "host_only": true,
+     "secure": true,
+     "same_site": "<no restriction/lax/strict>"
+     }
+   ]
+ }
+}
+```
+
+Each object uniquely identifies a cookie. The `first_party_domain` field is optional and may be left empty.
+The `variable_data` attribute contains a list of cookie properties that may change with each update. The 
+attribute `label` is only required if the data is to be used for training a classifier. For prediction 
+purposes it is not needed.
+
+Scripts to gather labelled training data, as well as to generate the above JSON format from collected cookies 
+can be found in the Consent Crawler repository:
+
+https://github.com/dibollinger/CookieBlock-Consent-Crawler
+
+## Training a Classifier
 
 ## Required Inputs
 
@@ -35,41 +92,6 @@ The results can be output as either libsvm text format, as a pickled sparse matr
 or in the form of an XGB data matrix. In either case, the script also produces a list of labels, weights
 and feature names. For the XGB output these are already integrated into the binary, while for the other formats
 they are output as separate files.
-
-### JSON Cookie Format
-
-The data for each cookie is expected to be stored as a JSON object, with the name, domain and path forming
-the key `cookie_id`. Each entry is structured as follows:
-```json
-{
- "cookie_id": {
-   "name": "<name>",
-   "domain": "<domain>",
-   "path": "/path",
-   "first_party_domain": "http://first-party-domain",
-   "label": 0,
-   "cmp_origin": 0,
-    "variable_data": [
-     {
-     "value": "<cookie content>",
-     "expiry": "<expiration in seconds>",
-     "session": "<true/false>",
-     "http_only": true,
-     "host_only": true,
-     "secure": true,
-     "same_site": "<no restriction/lax/strict>"
-     }
-   ]
- }
-}
-```
-
-Each object uniquely identifies a cookie. The `first_party_domain` field is optional and may be left empty.
-The `variable_data` attribute contains a list of cookie properties that may change with each update.
-
-The attribute `label` is only required if the data is to be used for training a classifier.
-For prediction purposes it is not needed.
-
 
 ## Training the model
 
@@ -126,8 +148,10 @@ be renamed.
 * `./resources/`: Contains external resources used for the feature extraction.
 * `./training_data/`: Contain some examples for the JSON-formatted training data.
 * `./predict_class.py`: Using a previously constructed classifier model, and given JSON cookie data as input, predicts labels for each cookie.
-* `./prepare_training_data.py`: Script to transform input cookie data (in JSON format) into a sparse feature matrix. The feature selection and parameters are controlled by `features_extraction/features.json`.
-
+* `./prepare_training_data.py`: Script to transform input cookie data (in JSON format) into 
+                                a sparse feature matrix. The feature selection and parameters
+                                are controlled by `features_extraction/features.json`.
+  
 # License
 
 __Copyright © 2021 Dino Bollinger__
@@ -168,3 +192,9 @@ __Thesis Supervision and Assistance:__
 * Dr. Carlos Cotrini
 * Prof. Dr. David Basin
 * The Institute of Information Security at ETH Zürich
+
+* [CookieBlock Browser Extension](https://github.com/dibollinger/CookieBlock)
+* [OpenWPM-based Consent Crawler](https://github.com/dibollinger/CookieBlock-Consent-Crawler)
+* [Violation Detection](https://github.com/dibollinger/CookieBlock-Other-Scripts)
+* [Prototype Consent Crawler](https://github.com/dibollinger/CookieBlock-Crawler-Prototype)
+* [Collected Data](https://drive.google.com/drive/folders/1P2ikGlnb3Kbb-FhxrGYUPvGpvHeHy5ao)
