@@ -21,8 +21,6 @@ import xgboost as xgb
 import lightgbm as lgbm
 import catboost as catb
 
-from classifiers.shared.utils import bayesian_decision, get_optimized_loss_weights
-
 import numpy as np
 from scipy.sparse import csr_matrix
 
@@ -30,6 +28,28 @@ from typing import Union, Dict, Optional
 from feature_extraction.processor import CookieFeatureProcessor
 
 logger = logging.getLogger("predict")
+
+
+def get_equal_loss_weights():
+    """ Replicates the argmax probability decision. """
+    return np.array([[0., 1., 1., 1.],
+                     [1., 0, 1., 1.],
+                     [1., 1., 0, 1.],
+                     [1., 1., 1., 0]])
+
+
+def bayesian_decision(prob_vectors: np.ndarray, loss_weights: np.ndarray):
+    """
+    Compute class predictions using Bayesian Decision Theory.
+    :param prob_vectors: Probability vectors returns by the multiclass classification.
+    :param loss_weights: nclass x nclass matrix, loss per classification choice
+    :return: Numpy array of discrete label predictions.
+    """
+    num_instances, num_classes = prob_vectors.shape
+    assert loss_weights.shape == (num_classes, num_classes), f"Loss weight matrix shape does not match number of actual classes: {loss_weights.shape} vs. {num_classes} classes"
+    b = np.repeat(prob_vectors[:, :, np.newaxis], num_classes, axis=2)
+    return np.argmin(np.sum(b * loss_weights, axis=1), axis=1)
+
 
 class ModelWrapper:
 
@@ -124,7 +144,7 @@ def main() -> int:
     with open("predictions.json", 'w') as fd:
         json.dump(pred_json, fd)
 
-    # Check accuracy on Consent Cookies (which we did not train on)
+    # Check accuracy on Consent Cookies
     consentcookie_predictions = {"OptanonConsent": [0,0,0,0], "CookieConsent": [0,0,0,0]}
     i: int = 0
     for k in test_data_json.keys():
