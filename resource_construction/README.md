@@ -1,10 +1,10 @@
 # Scripts to construct the Feature Extraction Resources
 
-The scripts in this folder were used to construct the resources utilized for the feature extraction of the CookieBlock
-Feature Extractor.
+The scripts in this folder were used to construct the resources utilized for the 
+feature extraction of the CookieBlock Feature Extractor.
 
-The input format can vary. For some script a CookieBlock consent crawl database is expected, in others the training
-data in the format of a JSON file is required.
+The input format can vary. For some script a CookieBlock consent crawl database 
+is expected, in others the training data in the format of a JSON file is required.
 
 ## Folder Contents
 * `example_input/`: Contains an example input JSON file to use with the scripts.

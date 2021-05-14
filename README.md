@@ -1,33 +1,45 @@
 # CookieBlock Consent Classifier
-* [Description](#description)
+* [Introduction](#introduction)
+* [Requirements](#requirements)
+  * [Input Format](#input-format)
 * [Repository Contents](#repository-contents)
   * [Additional Details](#additional-details)
+* [Feature Extraction](#feature-extraction)
+  * [Usage](#usage)
+* [Classifier Usage](#classifier-usage)
+  * [Training the CookieBlock Model](#training-the-cookieblock-model)
+* [Repository Contents](#repository-contents)
 * [Credits](#credits)
 * [License](#license)
 
-## Description
+## Introduction
 
-This repository contains a collection of scripts to train machine learning classifiers on cookie data. 
+This repository contains the Feature Extractor as well as the classifier approaches used for CookieBlock.
+Note that this repository contains the Python variant of the feature extraction, which differs from 
+the Javascript version. Its outputs should not be used with CookieBlock!
 
-This includes both feature extraction for cookies, as well as the classifier scripts.
- 
-Implemented are XGBoost, LightGBM, CatBoost and a simple Recurrent Neural Network.
+The feature extractor takes as input a json document of cookie data, and outputs a sparse matrix
+of numerical features, where each row is a training sample, and the columns represent the features.
 
-Also includes the feature extraction scripts to create the sparse input matrix.
+The resulting sparse matrix can be used as input to the classifier training. Currently implemented
+are XGBoost, LightGBM, Catboost and a Recurrent Neural Network (the last not being greatly expanded
+upon). 
 
 ## Requirements
 
-The required libraries are listed inside `requirements.txt` placed in the base folder.
+The required libraries are listed inside `requirements.txt` placed in the base folder. 
+No special setup or install is needed, only the libraries need to be installed.
 
-In order to perform the feature extraction, some resource files are needed. Default files
-are provided within the folder `resources/`, but these can be recomputed as desired through
-the scripts located in the folder `resource_construction/`. For more information on the contents
-of this folder, see [here](resource_construction/README.md).
+In order to perform the feature extraction, some resource files are used. Default files
+are provided within the folder `resources/`, but these can be recomputed as desired 
+through the scripts located in the folder `resource_construction/`. 
+
+For more information on the contents of this folder, see [the README](resource_construction/README.md).
 
 ### Input Format
 
-The input data for each cookie is expected to be stored as a JSON object, with the name, domain 
-and path forming the key `cookie_id`. Each entry is structured as follows:
+Each cookie is expected to be stored as a JSON object, with the name, domain and path forming the 
+key. Each entry is structured as follows:
 ```json
 {
  "cookie_id": {
@@ -62,21 +74,35 @@ can be found in the Consent Crawler repository:
 
 https://github.com/dibollinger/CookieBlock-Consent-Crawler
 
-## Training a Classifier
-
-## Required Inputs
-
-A JSON document containing the cookie data with associated labels is required. 
-
-The cookie data can be obtained by using the following crawler: https://github.com/dibollinger/CookieBlock-Consent-Classifier
-
-Training data can be extracted from the resulting SQLite database through the cookie extraction
-script in the following repository: https://github.com/dibollinger/CookieBlock-Other-Scripts/blob/main/database_scripts/extract_cookie_data.py
-
 ## Feature Extraction
 
-All components relevant for the feature extraction are stored in the subfolder 
-`feature_extraction/`.
+The feature extraction takes as input the cookie information in JSON format, and computes from it a sparse
+matrix of numerical data. A large selection of feature extraction steps is supported. For the full list of
+them, refer to the [features.json](feature_extraction/features.json).
+
+From each cookie, we extract three distinct categories of features:
+
+* __Features extracted once per cookie:__ These features only need to be computed once for each cookie,
+  as they are based on information that cannot be altered through any changes to that cookie. This 
+  includes name, domain, path and other properties like the host_only flag.
+* __Features extracted once per update:__ These features are based on variable cookie data, such as
+  the payload of the cookie itself. Since these values may change, they are hence extracted once for
+  each observed "update" to a cookie, i.e. an instance where a previously existing cookie is set again.
+* __Features stemming from update differences:__ These features are computed when at least 2 updates are
+  present. Examples for this are the difference in expiration date, or the edit distance between the
+  values of two cookie updates.
+
+The extracted features are entirely numerical, i.e. no text or categorical data remains. However, the
+feature vector may contain boolean, ordinal or even missing data. Missing data is hereby represented as
+zero entries in the per-update or per-diff features.
+
+The [features.json](feature_extraction/features.json) holds not only a description of each feature, it
+also acts as input to the extractor and defines which features exist, what functions are used to
+extract them, what arguments are to be provided, if they require any resources to be loaded in advance
+and whether they are enabled or disabled for the next feature extraction run. Note that the "vector_size"
+key indicates how many entries a single feature produces.
+
+Each run of the feature extraction will also produce statistics on how long the extraction took.
 
 ### Usage
 To extract data with labels for the purpose of training a classifier, run the script 
@@ -93,7 +119,7 @@ or in the form of an XGB data matrix. In either case, the script also produces a
 and feature names. For the XGB output these are already integrated into the binary, while for the other formats
 they are output as separate files.
 
-## Training the model
+## Classifier Usage
 
     Usage:
       train_xgb.py <tr_data> <mode>
@@ -120,14 +146,25 @@ Allows for the discovery of optimal parameter combination.
 * `random_search`: Performs hyperparameter search using random combination of parameters.
 Much more efficient but less thorough than grid search. Useful for assessing the overall
 impact of altering individual parameters.
+  
+For XGBoost, the `classifiers/` directory contains a number of additional scripts to produce
+feature importance and other similar statistics. Please refer to the documentation in the 
+individual script files for more information.
 
-## Extracting the Model
+Finally, there is the scripts `predict_class.py` and `feature_matrix_statistics.py` in the base
+folder. The former is used as a simple wrapper to compute predictions with given cookie data,
+while the latter can be used to output the most common and least commonly extracted features in
+the cookie data.
+
+### Training the CookieBlock Model
 
 To produce the model used for the CookieBlock extension, one needs to train an XGBoost model
-using the script `classifiers/xgboost/train_xgb.py`, ideally with features extracted from the
-separate JavaScript implementation, provided at:
+using the script `classifiers/xgboost/train_xgb.py`, with features extracted from the
+separate JavaScript feature extraction implementation, provided at:
 
 https://github.com/dibollinger/CookieBlock
+
+This feature extractor works in the same way as the Python variant, with minor differences.
 
 Then, execute the script `classifiers/xgboost/create_small_dump.py` and provide it as input the
 boosted XGB model, in order to obtain four model files named `forest_classX.json`. 
@@ -135,31 +172,45 @@ This contains a compressed representation of the tree model that can be read by 
 extension and used to make decision. Each file corresponds to a specific class and should not 
 be renamed. 
 
-# Repository Contents
+
+## Repository Contents
 
 * `./classifiers/`: Contains python scripts to train the various classifier types.
-    - `./classifiers/xgboost/`: XGBoost-specific scripts. Includes training, feature importance and model extraction.
-    - `./classifiers/catboost/`: Scripts that use the "CatBoost" approach.
-    - `./classifiers/lightgbm/`: Scripts that use the "LightGBM" approach.
-    - `./classifiers/neural_networks/`: Tensorflow neural network scripts.
 * `./feature_extraction/`: Contains all python code needed for feature extraction.
 * `./feature_extraction/features.json`: Configuration where one can define, configure, enable or disable individual features.
+* `./resource_construction/`: Contains the Python scripts that were used to construct the feature extraction resources.
 * `./processed_features/`: Directory where the extracted feature matrices are stored.
 * `./resources/`: Contains external resources used for the feature extraction.
 * `./training_data/`: Contain some examples for the JSON-formatted training data.
+* `./feature_matrix_statistics.py`: Computes the most and least commonly used features, sorted by occurrence.
 * `./predict_class.py`: Using a previously constructed classifier model, and given JSON cookie data as input, predicts labels for each cookie.
 * `./prepare_training_data.py`: Script to transform input cookie data (in JSON format) into 
                                 a sparse feature matrix. The feature selection and parameters
                                 are controlled by `features_extraction/features.json`.
   
-# License
+## Credits
 
-__Copyright © 2021 Dino Bollinger__
+This repository was created as part of the master thesis __"Analyzing Cookies Compliance with the GDPR"__, 
+which can be found here:
 
-__MIT License, see included LICENSE file__
+https://www.research-collection.ethz.ch/handle/20.500.11850/477333
 
-----
+__Thesis Supervision and Assistance:__
+* Karel Kubicek
+* Dr. Carlos Cotrini
+* Prof. Dr. David Basin
+* Information Security Group at ETH Zürich
 
+---
+See also the following repositories for other components that were developed as part of the thesis:
+
+* [CookieBlock Browser Extension](https://github.com/dibollinger/CookieBlock)
+* [OpenWPM-based Consent Crawler](https://github.com/dibollinger/CookieBlock-Consent-Crawler)
+* [Violation Detection](https://github.com/dibollinger/CookieBlock-Other-Scripts)
+* [Prototype Consent Crawler](https://github.com/dibollinger/CookieBlock-Crawler-Prototype)
+* [Collected Data](https://drive.google.com/drive/folders/1P2ikGlnb3Kbb-FhxrGYUPvGpvHeHy5ao)
+
+---
 This repository uses the XGBoost, LightGBM and CatBoost algorithms, as well as Tensorflow.
 
 They can be found at:
@@ -168,33 +219,8 @@ They can be found at:
 * __CatBoost:__ https://github.com/catboost
 * __Tensorflow:__ https://www.tensorflow.org/
 
-----
-# License
+## License
 
-Copyright (c) 2021, Dino Bollinger
+__Copyright © 2021 Dino Bollinger, Department of Computer Science at ETH Zürich, Information Security Group__
 
-This project is released under the BSD 3-clause license, see the included LICENSE file.
-
-----
-
-The scripts in this repository were created as part of the master thesis *"Analyzing Cookies Compliance with the GDPR*, 
-and is part of a series of repositories for the __CookieBlock__ browser extension.
-
-__Related Repositories:__
-* CookieBlock: https://github.com/dibollinger/CookieBlock
-* Final Crawler: https://github.com/dibollinger/CookieBlock-Consent-Crawler
-* Cookie Classifier: https://github.com/dibollinger/CookieBlock-Consent-Classifier
-* Violation Detection & More: https://github.com/dibollinger/CookieBlock-Other-Scripts 
-* Collected Data: https://drive.google.com/drive/folders/1P2ikGlnb3Kbb-FhxrGYUPvGpvHeHy5ao
-
-__Thesis Supervision and Assistance:__
-* Karel Kubicek
-* Dr. Carlos Cotrini
-* Prof. Dr. David Basin
-* The Institute of Information Security at ETH Zürich
-
-* [CookieBlock Browser Extension](https://github.com/dibollinger/CookieBlock)
-* [OpenWPM-based Consent Crawler](https://github.com/dibollinger/CookieBlock-Consent-Crawler)
-* [Violation Detection](https://github.com/dibollinger/CookieBlock-Other-Scripts)
-* [Prototype Consent Crawler](https://github.com/dibollinger/CookieBlock-Crawler-Prototype)
-* [Collected Data](https://drive.google.com/drive/folders/1P2ikGlnb3Kbb-FhxrGYUPvGpvHeHy5ao)
+MIT License, see included LICENSE file
