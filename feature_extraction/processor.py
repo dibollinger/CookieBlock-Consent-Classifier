@@ -24,9 +24,7 @@ The concept is as follows:
                              These are transformed second, and we have as many as defined by the cookie updates parameter.
       - per-diff features: Extracted once for each sequential pair of cookie updates, ordered by timestamp.
                            Utilize the values of two cookies, specifically the difference between them.
-                           Transformed third. As many as (num_updates - 1) features are extracted for these.
-   * Finally there is also an attribute "num_updates" which define how many updates at most are considered for the
-     extraction of per-update features.
+                           Transformed third. As many as "num_diffs" features are extracted for these.
 """
 
 # Essential imports required to extract features
@@ -44,7 +42,7 @@ from math import log
 import scipy.sparse
 from sklearn.datasets import dump_svmlight_file
 import xgboost as xgb
-import pycountry
+import random
 import difflib
 from Levenshtein import distance as lev_distance
 
@@ -84,7 +82,11 @@ class CookieFeatureProcessor:
 
         # cookie names specific to one of the consent management platforms we crawled
         # these are over-represented as they are present on nearly every crawled website of the training data
-        self._skipped_names: Optional[re.Pattern] = re.compile("OptanonConsent|CookieConsent") if skip_cmp_cookies else None
+        if skip_cmp_cookies:
+            self._skipped_names: Optional[re.Pattern] = re.compile("OptanonConsent|OptanonAlertBoxClosed|CookieConsent")
+        else:
+            self._skipped_names = None
+        self._skip_ratio = 2.0 / 3.0
 
         # compute the expected number of features based on the feature mapping
         self.num_cookie_features: int = 0
@@ -108,7 +110,7 @@ class CookieFeatureProcessor:
         for f in self.feature_mapping["per_diff_features"]:
             funcs += 1
             if f["enabled"]:
-                self.num_diff_features += f["vector_size"] * (self.feature_mapping["num_updates"] - 1)
+                self.num_diff_features += f["vector_size"] * (self.feature_mapping["num_diffs"] - 1)
         logger.info(f"Number of per-diff functions: {funcs}")
 
         self.num_features: int = (self.num_cookie_features + self.num_update_features + self.num_diff_features)
@@ -137,20 +139,10 @@ class CookieFeatureProcessor:
         self._iab_europe_vendors: Optional[Set[str]] = None
 
         # This set is required to limit false positives. These are all the separators recognized as valid
-        self.valid_csv_delimiters: str = ",|#:;&_"
+        self.valid_csv_delimiters: str = ",|#:;&_.-"
 
         # Strings that identify boolean values.
         self.truth_values: re.Pattern = re.compile(r"\b(true|false|yes|no|0|1|on|off)\b", re.IGNORECASE)
-
-        # One large set that contains strings that relate to country, currency or language
-        self.locale_lookup: Set = set()
-        self.locale_lookup.update({c.name for c in pycountry.countries})
-        self.locale_lookup.update({c.alpha_2 for c in pycountry.countries})
-        self.locale_lookup.update({c.alpha_3 for c in pycountry.countries})
-        self.locale_lookup.update({c.name for c in pycountry.currencies})
-        self.locale_lookup.update({c.alpha_3 for c in pycountry.currencies})
-        self.locale_lookup.update({c.name for c in pycountry.languages})
-        self.locale_lookup.update({c.alpha_3 for c in pycountry.languages})
 
         # Horrible Date Regexes
         self.pattern_year_month_day: re.Pattern = re.compile("(19[7-9][0-9]|20[0-3][0-9]|[0-9][0-9])-[01][0-9]-[0-3][0-9]")
@@ -289,7 +281,7 @@ class CookieFeatureProcessor:
                     feat_cnt += feature["vector_size"]
         for feature in self.feature_mapping["per_diff_features"]:
             if feature["enabled"]:
-                for u in range(self.feature_mapping["num_updates"] - 1):
+                for u in range(self.feature_mapping["num_diffs"] - 1):
                     for i in range(feature["vector_size"]):
                         feat_list.append((str(feat_cnt + i) + f" diff_{u}_" + feature["name"] + f"-{i} i"))
                     feat_cnt += feature["vector_size"]
@@ -438,7 +430,7 @@ class CookieFeatureProcessor:
                     update_count = 0
                     try:
                         prev_update = next(v_iter)
-                        while update_count < self.feature_mapping["num_updates"] - 1:
+                        while update_count < self.feature_mapping["num_diffs"] - 1:
                             curr_update = next(v_iter)
                             function(prev_update, curr_update, **feature["args"])
                             self._increment_col(feature["vector_size"])
@@ -446,7 +438,7 @@ class CookieFeatureProcessor:
                             update_count += 1
                     except StopIteration:
                         # if out of updates, need to increment column counter so size is uniform
-                        empty_update_slots = feature["vector_size"] * (self.feature_mapping["num_updates"] - update_count - 1)
+                        empty_update_slots = feature["vector_size"] * (self.feature_mapping["num_diffs"] - update_count - 1)
                         self._increment_col(empty_update_slots)
 
             # before moving to the next cookie entry, reset the column index and move to the next row
@@ -478,8 +470,9 @@ class CookieFeatureProcessor:
 
             # filter out specific cookie names
             if self._skipped_names and self._skipped_names.match(entry_values["name"]):
-                ctr_cmp_cookie_skipped += 1
-                continue
+                if random.random() < self._skip_ratio:
+                    ctr_cmp_cookie_skipped += 1
+                    continue
 
             # append the label to the list
             self._insert_label(category_label)
@@ -544,7 +537,7 @@ class CookieFeatureProcessor:
                     update_count = 0
                     try:
                         prev_update = next(v_iter)
-                        while update_count < self.feature_mapping["num_updates"] - 1:
+                        while update_count < self.feature_mapping["num_diffs"] - 1:
                             curr_update = next(v_iter)
                             t_start = time.perf_counter_ns()
                             function(prev_update, curr_update, **feature["args"])
@@ -554,7 +547,7 @@ class CookieFeatureProcessor:
                             update_count += 1
                     except StopIteration:
                         # if out of updates, need to increment column counter so size is uniform
-                        empty_update_slots = feature["vector_size"] * (self.feature_mapping["num_updates"] - update_count - 1)
+                        empty_update_slots = feature["vector_size"] * (self.feature_mapping["num_diffs"] - update_count - 1)
                         self._increment_col(empty_update_slots)
 
             # before moving to the next cookie entry, reset the column index and move to the next row
@@ -775,7 +768,6 @@ class CookieFeatureProcessor:
         if check_flag_changed(cookie_features["variable_data"], "http_only"):
             self._insert_sparse_entry(1.0)
 
-
     def feature_secure_changed(self, cookie_features: Dict[str, Any]) -> None:
         """ per-cookie feature
         Inserts 1 if throughout all updates for the cookie, the secure flag changed at least once.
@@ -961,64 +953,6 @@ class CookieFeatureProcessor:
         except StopIteration:
             pass
 
-
-    def feature_http_only_first_update(self, cookie_features: Dict[str, Any]) -> None:
-        """ per cookie feature
-        HTTP_ONLY flag of the first update only. First update is guaranteed to exist.
-        :param cookie_features: Dictionary containing key "variable_data"
-        """
-        if cookie_features["variable_data"][0]["http_only"]:
-            self._insert_sparse_entry(1.0)
-
-    def feature_host_only_first_update(self, cookie_features: Dict[str, Any]) -> None:
-        """ per cookie feature
-        HOST_ONLY flag of the first update only. First update is guaranteed to exist.
-        :param cookie_features: Dictionary containing key "variable_data"
-        """
-        if cookie_features["variable_data"][0]["host_only"]:
-            self._insert_sparse_entry(1.0)
-
-    def feature_secure_first_update(self, cookie_features: Dict[str, Any]) -> None:
-        """ per cookie feature
-        SECURE flag of the first update only. First update is guaranteed to exist.
-        :param cookie_features: Dictionary containing key "variable_data"
-        """
-        if cookie_features["variable_data"][0]["secure"]:
-            self._insert_sparse_entry(1.0)
-
-    def feature_session_first_update(self, cookie_features: Dict[str, Any]) -> None:
-        """ per cookie feature
-        SESSION flag of the first update only. First update is guaranteed to exist.
-        :param cookie_features: Dictionary containing key "variable_data"
-        """
-        if cookie_features["variable_data"][0]["session"]:
-            self._insert_sparse_entry(1.0)
-
-    def feature_same_site_first_update(self, cookie_features: Dict[str, Any]) -> None:
-        """ per cookie feature
-        SAME_SITE flag of the first update only. First update is guaranteed to exist.
-        :param cookie_features: Dictionary containing key "variable_data"
-        """
-        s_flag: str = cookie_features["variable_data"][0]["same_site"]
-        if s_flag == "no_restriction":
-            self._insert_sparse_entry(1.0, col_offset=0)
-        elif s_flag == "lax":
-            self._insert_sparse_entry(1.0, col_offset=1)
-        elif s_flag == "strict":
-            self._insert_sparse_entry(1.0, col_offset=2)
-        else:
-            logger.warning(f"Unrecognized same_site content: {s_flag}")
-
-
-    def feature_expiry_first_update(self, cookie_features: Dict[str, Any]) -> None:
-        """ per cookie feature
-        Expiry value of the first update only. First update is guaranteed to exist.
-        :param cookie_features: Dictionary containing key "variable_data"
-        """
-        expiry: int = cookie_features["variable_data"][0]["expiry"]
-        self._insert_sparse_entry(expiry)
-
-
     def feature_content_changed(self, cookie_features: Dict[str, Any]) -> None:
         """ per-cookie feature
         Inserts 1 if throughout all updates for the cookie, the content changed at least once.
@@ -1168,53 +1102,19 @@ class CookieFeatureProcessor:
         Feature that checks whether the cookie content contains a delimiter separated value.
         Will insert the length if this is the case. A specific set of possible delimiters is considered for this.
 
-        Excluded are "." and "-" as they usually have specific uses.
-        Note that this is a heuristic, as it may include false positives.
-
         :param var_data: Dictionary of per-update cookie data containing key "value".
         :param min_seps: Minimum number (-1) of instances of the delimiter inside the string.
         """
         unquoted_content = urllib.parse.unquote(var_data["value"])
-        split_data: List[str] = split_delimiter_separated(unquoted_content, self.csv_sniffer,
+        split_data, delimiter = split_delimiter_separated(unquoted_content, self.csv_sniffer,
                                                           delimiters=self.valid_csv_delimiters, min_seps=min_seps)
+        arr = [-1] * len(self.valid_csv_delimiters)
         if split_data:
-            self._insert_sparse_entry(len(split_data))
-        else:
-            self._insert_sparse_entry(-1.0)
+            arr[self.valid_csv_delimiters.index(delimiter)] = len(split_data)
+        self._multi_insert_sparse_entries(arr)
 
 
-    def feature_period_separated(self, var_data: Dict[str, Any], min_seps: int) -> None:
-        """ per-update feature:
-        Check if the cookie content contains a string separated by the "." character.
-        Inserts length. Heuristic, may include false positives.
-        :param var_data: Dictionary of per-update cookie data containing key "value".
-        :param min_seps: Minimum number of instances of the delimiter.
-        """
-        unquoted_content = urllib.parse.unquote(var_data["value"])
-        split_data: List[str] = split_delimiter_separated(unquoted_content, self.csv_sniffer,
-                                                          delimiters=".", min_seps=min_seps)
-        if split_data:
-            self._insert_sparse_entry(len(split_data))
-        else:
-            self._insert_sparse_entry(-1.0)
-
-
-    def feature_dash_separated(self, var_data: Dict[str, Any], min_seps: int) -> None:
-        """per-update feature:
-        Check if the cookie content contains a string separated by the "-" character.
-        Inserts length if csv.
-        :param var_data: Dictionary of per-update cookie data containing key "value".
-        :param min_seps: Minimum number of instances of the delimiter.
-        """
-        unquoted_content = urllib.parse.unquote(var_data["value"])
-        split_data: List[str] = split_delimiter_separated(unquoted_content, self.csv_sniffer,
-                                                          delimiters="-", min_seps=min_seps)
-        if split_data:
-            self._insert_sparse_entry(len(split_data))
-        else:
-            self._insert_sparse_entry(-1.0)
-
-    def feature_maybe_base64_encoding(self, var_data: Dict[str, Any]) -> None:
+    def feature_base64_encoded(self, var_data: Dict[str, Any]) -> None:
         """ per-update feature:
         Heuristic Feature. Try to decode the cookie content as base64.
         If it works, then maybe it's binary data, maybe it's coincidence that the format matched.
@@ -1228,19 +1128,6 @@ class CookieFeatureProcessor:
             self._insert_sparse_entry(-1.0)
         else:
             self._insert_sparse_entry(1.0)
-
-    def feature_definite_base64_encoding(self, var_data: Dict[str, Any]) -> None:
-        """ per-update feature:
-        Heuristic Feature. Try to decode the cookie content as base64.
-        If this worked, check if the resulting bytes can be encoded in utf-8.
-        If so, we most likely have a valid base64 encoding.
-        :param var_data: Dictionary of per-update cookie data with key "value".
-        """
-        unquoted_content = urllib.parse.unquote(var_data["value"])
-        if try_decode_base64(unquoted_content):
-            self._insert_sparse_entry(1.0)
-        else:
-            self._insert_sparse_entry(-1.0)
 
     def feature_contains_javascript_object(self, var_data: Dict[str, Any]) -> None:
         """ per-update feature:
@@ -1283,7 +1170,7 @@ class CookieFeatureProcessor:
         :param min_seps: Minimum number of separations to be considered a CSV
         """
         unquoted_content = urllib.parse.unquote(var_data["value"])
-        data_entries = split_delimiter_separated(unquoted_content, self.csv_sniffer,
+        data_entries, separator = split_delimiter_separated(unquoted_content, self.csv_sniffer,
                                                  delimiters=self.valid_csv_delimiters, min_seps=min_seps)
 
         contains_num: bool = False
@@ -1307,7 +1194,7 @@ class CookieFeatureProcessor:
         self._insert_sparse_entry(1.0 if contains_hex else -1.0, col_offset=1)
         self._insert_sparse_entry(1.0 if contains_alpha else -1.0, col_offset=2)
         self._insert_sparse_entry(1.0 if contains_alnum else -1.0, col_offset=3)
-        self._insert_sparse_entry(1.0 if contains_bool else -1.0, col_offset=3)
+        self._insert_sparse_entry(1.0 if contains_bool else -1.0, col_offset=4)
 
     def feature_js_content(self, var_data: Dict[str, Any]) -> None:
         """ per-update feature
@@ -1491,16 +1378,6 @@ class CookieFeatureProcessor:
         else:
             self._insert_sparse_entry(-1.0)
 
-    def feature_locale_term(self, var_data: Dict[str, Any]) -> None:
-        """ per-update feature
-        Checks if the cookie content represents a country, currency or language identifier
-        :param var_data: Cookie update dictionary with the key "value"
-        """
-        unquoted_content = urllib.parse.unquote(var_data["value"])
-        if unquoted_content in self.locale_lookup:
-            self._insert_sparse_entry(1.0)
-        else:
-            self._insert_sparse_entry(-1.0)
 
     def feature_timestamp_content(self, var_data: Dict[str, Any]) -> None:
         """ per-update feature

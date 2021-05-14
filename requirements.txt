@@ -9,7 +9,6 @@ catboost~=0.24.4
 lightgbm~=3.1.1
 requests~=2.25.1
 js2py~=0.70
-pycountry~=20.7.3
 sklearn~=0.0
 tqdm~=4.59.0
 pyenchant~=3.2.0

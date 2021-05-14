@@ -112,7 +112,7 @@ def try_split_json(possible_json: str) -> Optional[Dict[str, Any]]:
 
 
 def split_delimiter_separated(possible_csv: str, csv_sniffer: csv.Sniffer,
-                              delimiters: str, min_seps: int = 2) -> Optional[List[str]]:
+                              delimiters: str, min_seps: int = 2):
     """
     If the given string is delimiter separated, split it and return the list of content strings.
     :param possible_csv: String to split.
@@ -125,7 +125,7 @@ def split_delimiter_separated(possible_csv: str, csv_sniffer: csv.Sniffer,
         dialect = csv_sniffer.sniff(possible_csv, delimiters=delimiters)
         num_separators = possible_csv.count(dialect.delimiter)
         if num_separators > min_seps:
-            return list(csv.reader((possible_csv,), dialect))[0]
+            return list(csv.reader((possible_csv,), dialect))[0], dialect.delimiter
     except csv.Error:
         # not csv formatted -- check if it's base64
         maybe_decoded = try_decode_base64(possible_csv)
@@ -136,11 +136,11 @@ def split_delimiter_separated(possible_csv: str, csv_sniffer: csv.Sniffer,
                 dialect = csv_sniffer.sniff(possible_csv, delimiters=delimiters)
                 num_separators = possible_csv.count(dialect.delimiter)
                 if num_separators > min_seps:
-                    return list(csv.reader((possible_csv,), dialect))[0]
+                    return list(csv.reader((possible_csv,), dialect))[0], dialect.delimiter
             except csv.Error:
                 pass
 
-    return None
+    return None, None
 
 
 def contains_delimiter_separated(possible_csv: str, csv_sniffer: csv.Sniffer,

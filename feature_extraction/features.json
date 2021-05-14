@@ -1,5 +1,6 @@
 {
   "num_updates": 1,
+  "num_diffs": 1,
   "per_cookie_features":
   [
     {
@@ -9,7 +10,7 @@
       "setup": "setup_top_names",
       "source": "resources/top_names.csv",
       "enabled": true,
-      "vector_size": 100,
+      "vector_size": 500,
       "args": {}
     },
     {
@@ -19,7 +20,7 @@
       "setup" : "setup_top_domains",
       "source": "resources/top_domains.csv",
       "enabled": true,
-      "vector_size": 100,
+      "vector_size": 500,
       "args": {}
     },
     {
@@ -39,12 +40,12 @@
       "setup": "setup_name_features",
       "source": "resources/name_features_filtered.csv",
       "enabled": true,
-      "vector_size": 100,
+      "vector_size": 500,
       "args": {}
     },
     {
       "name": "iab_vendor",
-      "desc": "Binary indicator of whether the cookie's domain is part of the IABEurope vendor list. \n These vendors are third-parties registered with IABEurope's TCF, which may perform data collection on the visitor.",
+      "desc": "Binary indicator of whether the cookie's domain is part of the IABEurope vendor list. These vendors are third-parties registered with IABEurope's TCF, which may perform data collection on the visitor.",
       "function": "feature_iab_vendor",
       "setup": "setup_iabeurope_vendors",
       "source": "resources/iabeurope_vendors.txt",
@@ -54,9 +55,17 @@
     },
     {
       "name": "domain_period",
-      "desc": "Deprecated. Redundant. Indicates that a cookie is valid for all subdomains. Identical to the host-only flag being 0.",
+      "desc": "Indicates that a cookie is valid for all subdomains.",
       "function": "feature_domain_period",
-      "enabled": false,
+      "enabled": true,
+      "vector_size": 1,
+      "args": {}
+    },
+    {
+      "name": "host_only",
+      "desc": "Binary indicator feature. Set to 1 if the cookie has the host-only flag set. This flag cannot changed with updates.",
+      "function": "feature_host_only_first_update",
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -93,14 +102,6 @@
       "args": {}
     },
     {
-      "name": "host_only_changed",
-      "desc": "Deprecated. Reason: Host-only flag cannot change in any update. Originally intended to indicate whether the host-only flag changed between any 2 updates.",
-      "function": "feature_host_only_changed",
-      "enabled": false,
-      "vector_size": 1,
-      "args": {}
-    },
-    {
       "name": "secure_changed",
       "desc": "Binary feature. Set to 1 if the 'secure' flag changed between any two updates for this cookie.",
       "function": "feature_secure_changed",
@@ -120,6 +121,22 @@
       "name": "session_changed",
       "desc": "Binary feature. Set to 1 if the 'session' flag changed between any two updates for this cookie. (extremely unlikely)",
       "function": "feature_is_session_changed",
+      "enabled": true,
+      "vector_size": 1,
+      "args": {}
+    },
+    {
+      "name": "content_changed",
+      "desc": "Binary feature. Set to 1 if the content of the cookie changed between any two updates.",
+      "function": "feature_content_changed",
+      "enabled": true,
+      "vector_size": 1,
+      "args": {}
+    },
+    {
+      "name": "expiry_changed",
+      "desc": "Binary indicator. Set to 1 if the expiration date changed significantly (> 24 hours) between any two consecutive updates.",
+      "function": "feature_expiry_changed",
       "enabled": true,
       "vector_size": 1,
       "args": {}
@@ -163,30 +180,6 @@
       "enabled": true,
       "vector_size": 2,
       "args": {}
-    },
-    {
-      "name": "expiry_changed",
-      "desc": "Binary indicator. Set to 1 if the expiration date changed significantly (> 24 hours) between any two consecutive updates.",
-      "function": "feature_expiry_changed",
-      "enabled": true,
-      "vector_size": 1,
-      "args": {}
-    },
-    {
-      "name": "host_only",
-      "desc": "Binary indicator feature. Set to 1 if the cookie has the host-only flag set. This flag cannot changed with updates.",
-      "function": "feature_host_only_first_update",
-      "enabled": true,
-      "vector_size": 1,
-      "args": {}
-    },
-    {
-      "name": "content_changed",
-      "desc": "Binary feature. Set to 1 if the content of the cookie changed between any two updates.",
-      "function": "feature_content_changed",
-      "enabled": true,
-      "vector_size": 1,
-      "args": {}
     }
   ],
   "per_update_features":
@@ -196,14 +189,6 @@
       "desc": "Binary Feature. Set to 1 if the http_only flag is set for the update.",
       "function": "feature_http_only",
       "enabled": true,
-      "vector_size": 1,
-      "args": {}
-    },
-    {
-      "name": "host_only",
-      "desc": "Deprecated. Host-only flag can never change, hence it is redundant to have it per-update.",
-      "function": "feature_host_only",
-      "enabled": false,
       "vector_size": 1,
       "args": {}
     },
@@ -284,35 +269,15 @@
       "desc": "Ordinal Feature. Number of CSV separated columns. Uses a predefined set of delimiters. A minimum number of separations is needed for this feature to be extracted. Finally, once a delimiter is chosen, counts the number of columns.",
       "function": "feature_delimiter_separated",
       "enabled": true,
-      "vector_size": 1,
+      "vector_size": 9,
       "args": {
-        "min_seps": 2
+        "min_seps": 1
       }
     },
     {
-      "name": "period_sep",
-      "desc": "Ordinal Feature. Whether the cookie content is separated by the '.' character. Extracts the number of separations as a feature, -1 if no separation.",
-      "function": "feature_period_separated",
-      "enabled": true,
-      "vector_size": 1,
-      "args": {
-        "min_seps": 3
-      }
-    },
-    {
-      "name": "dash_sep",
-      "desc": "Ordinal Feature. Whether the cookie content is separated by the '-' character. Extracts the number of separations as a feature, -1 if no separation.",
-      "function": "feature_dash_separated",
-      "enabled": true,
-      "vector_size": 1,
-      "args": {
-        "min_seps": 2
-      }
-    },
-    {
-      "name": "maybe_base64",
-      "desc": "Try to decode the cookie content as base64. If it works, set feature to 1, else -1. Note that this does not necessarily indicate that this is actually a base64 encoded value -- only that it may be.",
-      "function": "feature_maybe_base64_encoding",
+      "name": "base64_encoded",
+      "desc": "Try to decode the cookie content as base64 into a UTF-16 string.",
+      "function": "feature_base64_encoded",
       "enabled": true,
       "vector_size": 1,
       "args": {}
@@ -332,7 +297,7 @@
       "setup": "setup_content_terms",
       "source": "resources/content_terms_filtered.csv",
       "enabled": true,
-      "vector_size": 50,
+      "vector_size": 500,
       "args": {}
     },
     {
@@ -402,17 +367,17 @@
       "args": {}
     },
     {
-      "name": "boolean_content",
-      "desc": "Binary Feature. Set to 1 if the cookie content is contained in a set of common boolean identifiers. (include 1, 0, true, false, yes, no etc.)",
-      "function": "feature_boolean_content",
+      "name": "empty_content",
+      "desc": "Binary Feature. Set to 1 if the cookie content is empty or whitespace.",
+      "function": "feature_empty_content",
       "enabled": true,
       "vector_size": 1,
       "args": {}
     },
     {
-      "name": "locale_content",
-      "desc": "Binary Feature. Set to 1 if the cookie content is a country, language or currency identifier. Unfortunately, does not check whether it contains such an identifier, due to the large number of tokens.",
-      "function": "feature_locale_term",
+      "name": "boolean_content",
+      "desc": "Binary Feature. Set to 1 if the cookie content is contained in a set of common boolean identifiers. (include 1, 0, true, false, yes, no etc.)",
+      "function": "feature_boolean_content",
       "enabled": true,
       "vector_size": 1,
       "args": {}
@@ -456,7 +421,7 @@
       "name": "time_difference",
       "desc": "Ordinal Feature. Compute the expiration time difference in seconds between updates.",
       "function": "feature_time_diff",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -464,7 +429,7 @@
       "name": "gestalt_similarity",
       "desc": "Ordinal Feature. Compute the ratio of similarity between consecutive cookie updates based on Gestalt-Pattern matching. \n NOTE: might not be available for the extension.",
       "function": "feature_gestalt_pattern_ratio",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -472,7 +437,7 @@
       "name": "lev_distance",
       "desc": "Ordinal Feature. Compute the Levenshtein Distance between consecutive cookie updates.",
       "function": "feature_levenshtein_dist",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     }
