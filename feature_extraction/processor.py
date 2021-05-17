@@ -46,7 +46,7 @@ import random
 import difflib
 from Levenshtein import distance as lev_distance
 
-from utils import (load_lookup_from_csv, url_to_uniform_domain, split_delimiter_separated,
+from .utils import (load_lookup_from_csv, url_to_uniform_domain, split_delimiter_separated,
                    check_flag_changed, try_decode_base64, try_split_json, delim_sep_check)
 
 # Non-essential
