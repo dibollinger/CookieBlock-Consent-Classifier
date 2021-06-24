@@ -12,8 +12,8 @@ LibSVM text works too but comes with some overhead in setting up.
 Usage:
     train_xgb <tr_data> <mode> [<class_weights>]
 
-Options:
-    -h --help                      Show this help message.
+Options
+    -h --help   Show this help message.
 """
 
 import logging
@@ -87,7 +87,7 @@ def get_best_params() -> Dict[str, Union[None, float, int, str]]:
             # Tree parameters
             'learning_rate': 0.25,
             'gamma': 1,
-            'max_depth': 30,
+            'max_depth': 32,
             'min_child_weight': 3,
             'max_delta_step': 0,
             'subsample': 1,
@@ -98,10 +98,6 @@ def get_best_params() -> Dict[str, Union[None, float, int, str]]:
             'max_leaves': 0,
             'max_bin': 256,
             'predictor': 'auto',
-
-            # Following only used with DART
-            "rate_drop": 0.1,
-            "one_drop": 1,
 
             # Learning Task Parameters
             'objective': 'multi:softprob',
@@ -255,7 +251,7 @@ def simple_train(X: csr_matrix, y: List[int], weights: Optional[List[float]]) ->
     # train on entire dataset, save that model
     evallist = [(dtrain, 'train')]
     bst: xgb.Booster = xgb.train(params, dtrain,
-                                 num_boost_round=17, early_stopping_rounds=2,
+                                 num_boost_round=20, early_stopping_rounds=3,
                                  verbose_eval=True, evals=evallist)
 
     try:
@@ -314,7 +310,7 @@ def split_train(X: csr_matrix, y: List[int], weights: Optional[List[float]],
     evallist = [(dtrain, 'train'), (dtest, 'eval')]
 
     evals_result = dict()
-    bst: xgb.Booster = xgb.train(params, dtrain, num_boost_round=16, early_stopping_rounds=10,
+    bst: xgb.Booster = xgb.train(params, dtrain, num_boost_round=20, early_stopping_rounds=10,
                                  verbose_eval=True, evals=evallist, evals_result=evals_result)
 
     # Output the information collected by early stopping
@@ -333,6 +329,70 @@ def split_train(X: csr_matrix, y: List[int], weights: Optional[List[float]],
 
     # Save the model to the computed models subfolder
     save_model(bst)
+
+
+def split_train_crossvalidate(X: csr_matrix, y: List[int], weights: Optional[List[float]],
+                train_fraction: float = 0.8, apply_weights_to_validation: bool = True) -> None:
+    """
+    Apply the split training as if it were cross-validation.
+    """
+    assert type(X) is not xgb.DMatrix, "Can't perform train-test split on XGB DMatrix input"
+    assert weights is not None and len(y) == len(weights), "size of weights array doesn't match label array length"
+
+    class_names = ["necessary", "functional", "analytics", "advertising"]
+    num_classes = len(class_names)
+    assert num_classes == len(Counter(y).keys()), "number of classes in y does not match expected number of classes"
+
+    y_np = np.array(y)
+    w_np = np.array(weights)
+    kf = KFold(n_splits=5, shuffle=True)
+    for train_indices, test_indices in kf.split(X, y_np):
+        # Split the data into train and test set
+        #    (X_train, X_test,
+        #     y_train, y_test,
+        #     w_train, w_test) = train_test_split(X, y, weights, train_size=train_fraction, shuffle=True)
+        X_train = X[train_indices]
+        X_test = X[test_indices]
+        y_train = y_np[train_indices]
+        y_test = y_np[test_indices]
+        w_train = w_np[train_indices]
+        w_test = w_np[test_indices]
+
+        dtrain: xgb.DMatrix = xgb.DMatrix(data=X_train, label=y_train, weight=w_train)
+
+        # Validate either with or without the weights. May give significantly different performance.
+        # If weights are not applied, will not be comparable with cross-validation or hyperparam search.
+        dtest: xgb.DMatrix
+        if apply_weights_to_validation:
+            dtest = xgb.DMatrix(data=X_test, label=y_test, weight=w_test)
+        else:
+            dtest = xgb.DMatrix(data=X_test, label=y_test)
+
+        # Retrieve Parameters
+        params = get_best_params()
+        logger.info("Parameters:")
+        logger.info(params)
+
+        # Validation data must appear last to be used by early stopping
+        evallist = [(dtrain, 'train'), (dtest, 'eval')]
+
+        evals_result = dict()
+        bst: xgb.Booster = xgb.train(params, dtrain, num_boost_round=30, early_stopping_rounds=10,
+                                     feval=custom_metrics, verbose_eval=True, evals=evallist, evals_result=evals_result)
+
+        # Output the information collected by early stopping
+        limit: int = 0
+        try:
+            logger.info(f"Best Score: {bst.best_score}")
+            logger.info(f"Best Iteration: {bst.best_iteration}")
+            logger.info(f"Best NTree Limit: {bst.best_ntree_limit}")
+            limit = bst.best_ntree_limit
+        except AttributeError:
+            pass
+        logger.info(evals_result)
+
+        # Produce statistics on validation set (confusion matrix, accuracy, etc.)
+        output_validation_statistics(bst, limit, False, X_test, y_test, class_names)
 
 
 def crossvalidate_train(X, y: Optional[List[int]],
@@ -358,8 +418,8 @@ def crossvalidate_train(X, y: Optional[List[int]],
     logger.info("Parameters:")
     logger.info(params)
 
-    cv_results = xgb.cv(params, dtrain, num_boost_round=300, nfold=5, stratified=True, metrics=["mlogloss"],
-                        early_stopping_rounds=5, show_stdv=True, verbose_eval=True, seed=random_seed, shuffle=True)
+    cv_results = xgb.cv(params, dtrain, num_boost_round=30, nfold=5, stratified=True, metrics=["merror", "mlogloss"],
+                        early_stopping_rounds=10, show_stdv=True, verbose_eval=True, seed=random_seed, shuffle=True)
 
     logger.info(cv_results)
 
@@ -479,7 +539,8 @@ def main() -> int:
         split_train(X, y, W)
     elif mode == "cross_validate":
         logger.info("Training using crossvalidation.")
-        crossvalidate_train(X, y, W, random_seed=0)
+        split_train_crossvalidate(X,y,W)
+        #crossvalidate_train(X, y, W, random_seed=0)
     elif mode == "grid_search":
         logger.info("Training using  split.")
         paramsearch_train(X, y, W, search_type="grid", random_seed=0)
