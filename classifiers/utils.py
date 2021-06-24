@@ -7,6 +7,7 @@ import os
 import xgboost as xgb
 from typing import Union, Optional, List, Callable
 
+from sklearn.metrics import precision_score, recall_score, accuracy_score, f1_score
 from statistics import mean, stdev
 
 import numpy as np
@@ -153,34 +154,77 @@ def log_confidence_per_label(probs_with_label: pd.DataFrame, class_names: List[s
                                     f"+{stdev(confidence_per_label[i]) * 100.0:.3f}%")
 
 
-def log_accuracy_and_confusion_matrix(discrete_predictions: np.ndarray, true_labels: np.ndarray, class_names: List[str]) -> None:
+def log_accuracy_and_confusion_matrix(disc_predictions: np.ndarray, tl_in: np.ndarray, class_names: List[str]) -> None:
     """
     Log the confusion matrix, and overall accuracy rates for each class inside that confusion matrix.
     Also log the total accuracy over all classes.
-    :param discrete_predictions: Numpy vector of discrete predictions (i.e. labels)
+    :param disc_predictions: Numpy vector of discrete predictions (i.e. labels)
     :param true_labels: The true label vector, to compute the accuracy.
     :param class_names: Names for the classes.
     """
     num_classes: int = len(class_names)
-    num_instances: int = len(discrete_predictions)
-    assert max(discrete_predictions) <= (num_classes - 1), "Number of classes in predictions exceeds expected maximum."
+    num_instances: int = len(disc_predictions)
+    assert max(disc_predictions) <= (num_classes - 1), "Number of classes in predictions exceeds expected maximum."
+
+    true_labels = np.array([int(t) for t in tl_in])
+    pl_list = disc_predictions
 
     # Compute confusion matrix and output as CSV via pandas
     confusion_matrix: np.ndarray = np.zeros((num_classes, num_classes), dtype=int)
 
     # Note: this expects labels to be contiguous starting from 0, ending at num_classes, with no gaps in numbering
     for i in range(num_instances):
-        confusion_matrix[int(true_labels[i]), discrete_predictions[i]] += 1
+        confusion_matrix[true_labels[i], pl_list[i]] += 1
 
     # Output the confusion matrix to the log
     logger.info(f"Confusion Matrix:\n{confusion_matrix}")
+
+    acc_count = accuracy_score(true_labels, pl_list, normalize=False)
+    acc_ratio = accuracy_score(true_labels, pl_list, normalize=True)
+
+    logger.info(f"Total Accuracy Count: {acc_count}")
+    logger.info(f"Total Accuracy Ratio: {acc_ratio}")
+
+    micro_precision = precision_score(true_labels, pl_list, average="micro")
+    micro_recall = recall_score(true_labels, pl_list, average="micro")
+    micro_f1score = f1_score(true_labels, pl_list, average="micro")
+
+    logger.info(f"Micro Precision: {micro_precision}")
+    logger.info(f"Micro Recall: {micro_recall}")
+    logger.info(f"Micro F1Score: {micro_f1score}")
+
+    macro_precision = precision_score(true_labels, pl_list,average="macro")
+    macro_recall = recall_score(true_labels, pl_list, average="macro")
+    macro_f1score = f1_score(true_labels, pl_list, average="macro")
+
+    logger.info(f"Macro Precision: {macro_precision}")
+    logger.info(f"Macro Recall: {macro_recall}")
+    logger.info(f"Macro F1Score: {macro_f1score}")
+
+    weighted_precision = precision_score(true_labels, pl_list, average="weighted")
+    weighted_recall = recall_score(true_labels, pl_list, average="weighted")
+    weighted_f1score =f1_score(true_labels, pl_list, average="weighted")
+
+    logger.info(f"Weighted Precision: {weighted_precision}")
+    logger.info(f"Weighted Recall: {weighted_recall}")
+    logger.info(f"Weighted F1Score: {weighted_f1score}")
+
+    class_precision = precision_score(true_labels, pl_list, average=None)
+    class_recall = recall_score(true_labels, pl_list, average=None)
+    class_f1score = f1_score(true_labels, pl_list, average=None)
+
+    logger.info(f"Precision for each class: {class_precision}")
+    logger.info(f"Recall for each class: {class_recall}")
+    logger.info(f"F1Score for each class: {class_f1score}")
+
+    logger.info("-------------------------------")
 
     # DISABLED: Output the individual error rates per class
     # for i in range(num_classes):
     #    logger.info(f"Precision errors by true class '{class_names[i]}': {confusion_matrix[:, i] / np.sum(confusion_matrix[:, i])}")
     #    logger.info(f"Recall errors by class '{class_names[i]}': {confusion_matrix[i, :] / np.sum(confusion_matrix[i, :])}")
 
-    # Output Precision + Recall
+    # OLD Output Precision + Recall
     precision_vector = np.zeros(num_classes)
     recall_vector = np.zeros(num_classes)
     f1_score_vector = np.zeros(num_classes)
@@ -191,10 +235,10 @@ def log_accuracy_and_confusion_matrix(discrete_predictions: np.ndarray, true_lab
         recall_vector[i] = recall
         f1_score_vector[i] = 2 * ((precision * recall) / (precision + recall))
 
-    logger.info(f"Total Accuracy: {np.sum(np.diag(confusion_matrix)) / np.sum(confusion_matrix) * 100.0:.3f}%")
-    logger.info(f"Precision: {precision_vector}")
-    logger.info(f"Recall: {recall_vector}")
-    logger.info(f"F1 Scores: {f1_score_vector}")
+    logger.info(f"(Old Method) Total Accuracy: {np.sum(np.diag(confusion_matrix)) / np.sum(confusion_matrix) * 100.0:.3f}%")
+    logger.info(f"(Old Method) Precision: {precision_vector}")
+    logger.info(f"(Old Method) Recall: {recall_vector}")
+    logger.info(f"(Old Method) F1 Scores: {f1_score_vector}")
 
 
 def log_validation_statistics(predicted_probs: np.ndarray, true_labels: np.ndarray,
@@ -207,6 +251,7 @@ def log_validation_statistics(predicted_probs: np.ndarray, true_labels: np.ndarr
     :param eval_path: Path to output files to.
     :param timestamp: timestamp for the filenames.
     """
+
     # Output the softprob predictions with true labels to a csv first.
     preds_df = pd.DataFrame(predicted_probs, columns=class_names)
     preds_df.insert(0, "labels", true_labels)
@@ -231,6 +276,7 @@ def log_validation_statistics(predicted_probs: np.ndarray, true_labels: np.ndarr
 
     logger.info("....................................................................")
     logger.info("Predicted labels & accuracy when using ARGMAX as a prediction rule")
+
     disc_preds_argmax = np.argmax(predicted_probs, axis=1)
     log_accuracy_and_confusion_matrix(disc_preds_argmax, true_labels, class_names)
 
