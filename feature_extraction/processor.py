@@ -91,27 +91,36 @@ class CookieFeatureProcessor:
         # compute the expected number of features based on the feature mapping
         self.num_cookie_features: int = 0
         funcs = 0
+        f_enabled = 0
         for f in self.feature_mapping["per_cookie_features"]:
             funcs += 1
             if f["enabled"]:
+                f_enabled += 1
                 self.num_cookie_features += f["vector_size"]
         logger.info(f"Number of per-cookie functions: {funcs}")
+        logger.info(f"Number of per-cookie functions enabled: {f_enabled}")
 
         self.num_update_features: int = 0
         funcs = 0
+        f_enabled = 0
         for f in self.feature_mapping["per_update_features"]:
             funcs += 1
             if f["enabled"]:
+                f_enabled += 1
                 self.num_update_features += f["vector_size"] * self.feature_mapping["num_updates"]
         logger.info(f"Number of per-update functions: {funcs}")
+        logger.info(f"Number of per-update functions enabled: {f_enabled}")
 
         self.num_diff_features: int = 0
         funcs = 0
+        f_enabled = 0
         for f in self.feature_mapping["per_diff_features"]:
             funcs += 1
             if f["enabled"]:
-                self.num_diff_features += f["vector_size"] * (self.feature_mapping["num_diffs"] - 1)
+                f_enabled += 1
+                self.num_diff_features += f["vector_size"] * (self.feature_mapping["num_diffs"])
         logger.info(f"Number of per-diff functions: {funcs}")
+        logger.info(f"Number of per-diff functions enabled: {f_enabled}")
 
         self.num_features: int = (self.num_cookie_features + self.num_update_features + self.num_diff_features)
 
@@ -281,7 +290,7 @@ class CookieFeatureProcessor:
                     feat_cnt += feature["vector_size"]
         for feature in self.feature_mapping["per_diff_features"]:
             if feature["enabled"]:
-                for u in range(self.feature_mapping["num_diffs"] - 1):
+                for u in range(self.feature_mapping["num_diffs"]):
                     for i in range(feature["vector_size"]):
                         feat_list.append((str(feat_cnt + i) + f" diff_{u}_" + feature["name"] + f"-{i} i"))
                     feat_cnt += feature["vector_size"]
@@ -430,7 +439,7 @@ class CookieFeatureProcessor:
                     update_count = 0
                     try:
                         prev_update = next(v_iter)
-                        while update_count < self.feature_mapping["num_diffs"] - 1:
+                        while update_count < self.feature_mapping["num_diffs"]:
                             curr_update = next(v_iter)
                             function(prev_update, curr_update, **feature["args"])
                             self._increment_col(feature["vector_size"])
@@ -438,7 +447,7 @@ class CookieFeatureProcessor:
                             update_count += 1
                     except StopIteration:
                         # if out of updates, need to increment column counter so size is uniform
-                        empty_update_slots = feature["vector_size"] * (self.feature_mapping["num_diffs"] - update_count - 1)
+                        empty_update_slots = feature["vector_size"] * (self.feature_mapping["num_diffs"] - update_count)
                         self._increment_col(empty_update_slots)
 
             # before moving to the next cookie entry, reset the column index and move to the next row
@@ -537,7 +546,7 @@ class CookieFeatureProcessor:
                     update_count = 0
                     try:
                         prev_update = next(v_iter)
-                        while update_count < self.feature_mapping["num_diffs"] - 1:
+                        while update_count < self.feature_mapping["num_diffs"]:
                             curr_update = next(v_iter)
                             t_start = time.perf_counter_ns()
                             function(prev_update, curr_update, **feature["args"])
@@ -547,7 +556,7 @@ class CookieFeatureProcessor:
                             update_count += 1
                     except StopIteration:
                         # if out of updates, need to increment column counter so size is uniform
-                        empty_update_slots = feature["vector_size"] * (self.feature_mapping["num_diffs"] - update_count - 1)
+                        empty_update_slots = feature["vector_size"] * (self.feature_mapping["num_diffs"] - update_count)
                         self._increment_col(empty_update_slots)
 
             # before moving to the next cookie entry, reset the column index and move to the next row
@@ -792,6 +801,13 @@ class CookieFeatureProcessor:
         if check_flag_changed(cookie_features["variable_data"], "session"):
             self._insert_sparse_entry(1.0)
 
+    def feature_host_only_first_update(self, cookie_features: Dict[str, Any]) -> None:
+        """ per cookie feature
+        HOST_ONLY flag of the first update only. First update is guaranteed to exist.
+        :param cookie_features: Dictionary containing key "variable_data"
+        """
+        if cookie_features["variable_data"][0]["host_only"]:
+            self._insert_sparse_entry(1.0)
 
     def feature_gestalt_mean_and_stddev(self, cookie_features: Dict[str, Any]) -> None:
         """ per-cookie feature

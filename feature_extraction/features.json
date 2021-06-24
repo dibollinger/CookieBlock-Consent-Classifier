@@ -73,7 +73,7 @@
       "name": "third_party",
       "desc": "Binary feature, set to 1 if cookie's domain does not match the explicitly browsed first-party domain. (i.e. it is a third-party cookie) \n NOTE: This feature may not be viable for real-world application. The problem is that determining third-party status is easy for a crawled dataset, but much harder for data gathered within a browser-extension.",
       "function": "feature_is_third_party",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
@@ -89,7 +89,7 @@
       "name": "update_count",
       "desc": "Ordinal Feature. Counts the total number of updates observed for this cookie. \n NOTE: This feature may not be viable for real-world application. The problem here is that the absolute number of updates grows monotonically as the user browses websites, and eventually exceeds the number of updates observed by the dataset collected in a crawl.",
       "function": "feature_update_count",
-      "enabled": false,
+      "enabled": true,
       "vector_size": 1,
       "args": {}
     },
