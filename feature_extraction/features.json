@@ -297,7 +297,7 @@
       "setup": "setup_content_terms",
       "source": "resources/content_terms_filtered.csv",
       "enabled": true,
-      "vector_size": 500,
+      "vector_size": 50,
       "args": {}
     },
     {

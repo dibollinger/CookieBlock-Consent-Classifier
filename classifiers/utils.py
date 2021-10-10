@@ -159,7 +159,7 @@ def log_accuracy_and_confusion_matrix(disc_predictions: np.ndarray, tl_in: np.nd
     Log the confusion matrix, and overall accuracy rates for each class inside that confusion matrix.
     Also log the total accuracy over all classes.
     :param disc_predictions: Numpy vector of discrete predictions (i.e. labels)
-    :param true_labels: The true label vector, to compute the accuracy.
+    :param tl_in: The true label vector, to compute the accuracy.
     :param class_names: Names for the classes.
     """
     num_classes: int = len(class_names)

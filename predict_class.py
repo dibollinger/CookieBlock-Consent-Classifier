@@ -27,7 +27,9 @@ from scipy.sparse import csr_matrix
 from typing import Union, Dict, Optional
 from feature_extraction.processor import CookieFeatureProcessor
 
-logger = logging.getLogger("predict")
+from classifiers.utils import log_accuracy_and_confusion_matrix
+
+logger = logging.getLogger("classifier")
 
 
 def get_equal_loss_weights():
@@ -125,15 +127,17 @@ def main() -> int:
     model = ModelWrapper(model_path)
 
     logger.info("Extracting Features...")
-    cfp.extract_features(test_data_json)
+    cfp.extract_features_with_labels(test_data_json)
     sparse = cfp.retrieve_sparse_matrix()
-    cfp.reset_processor()
+    true_labels = np.array(cfp.retrieve_labels())
 
     logger.info("Predicting Labels...")
-    loss_function = get_optimized_loss_weights()
+    loss_function = np.array([[0, 1.0, 1.0, 1.0], [1.0, 0, 1.0, 1.0], [1.0, 1.0, 0, 1.0], [1.0, 1.0, 1.0, 0]])
     discrete_predictions = model.predict_with_bayes_decision(sparse, loss_function)
 
     assert len(discrete_predictions) == len(test_data_json)
+
+    log_accuracy_and_confusion_matrix(discrete_predictions, true_labels, ["Necessary", "Functional", "Analytics", "Advertising"])
 
     pred_json: Dict[str, int] = dict()
     i: int = 0
@@ -155,6 +159,7 @@ def main() -> int:
         i += 1
 
     logger.info(f"Predictions on Consent Cookies: {consentcookie_predictions}")
+    cfp.reset_processor()
 
     return 0
 
