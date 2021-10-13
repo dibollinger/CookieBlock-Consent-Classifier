@@ -13,3 +13,5 @@ sklearn~=0.0
 tqdm~=4.59.0
 pyenchant~=3.2.0
 beautifulsoup4~=4.9.3
+Levenshtein==0.15.0
+tensorflow==2.6.0
