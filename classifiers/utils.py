@@ -281,11 +281,11 @@ def log_validation_statistics(predicted_probs: np.ndarray, true_labels: np.ndarr
     log_accuracy_and_confusion_matrix(disc_preds_argmax, true_labels, class_names)
 
     logger.info("....................................................................")
-    logger.info("Predicted labels & accuracy when using Bayesian Decision Theory with Loss Weights")
-    loss_weights = get_optimized_loss_weights()
-    disc_preds_bayes = bayesian_decision(predicted_probs, loss_weights)
-    log_accuracy_and_confusion_matrix(disc_preds_bayes, true_labels, class_names)
-    logger.info(f"Loss Weights used: \n {loss_weights}")
+    #logger.info("Predicted labels & accuracy when using Bayesian Decision Theory with Loss Weights")
+    #loss_weights = get_optimized_loss_weights()
+    #disc_preds_bayes = bayesian_decision(predicted_probs, loss_weights)
+    #log_accuracy_and_confusion_matrix(disc_preds_bayes, true_labels, class_names)
+    #logger.info(f"Loss Weights used: \n {loss_weights}")
 
 
 def setupLogger(filename: Optional[str]) -> None:
