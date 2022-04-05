@@ -212,7 +212,7 @@ See also the following repositories for other components that were developed as 
 * [OpenWPM-based Consent Crawler](https://github.com/dibollinger/CookieBlock-Consent-Crawler)
 * [Violation Detection](https://github.com/dibollinger/CookieBlock-Other-Scripts)
 * [Prototype Consent Crawler](https://github.com/dibollinger/CookieBlock-Crawler-Prototype)
-* [Collected Data](https://drive.google.com/drive/folders/1P2ikGlnb3Kbb-FhxrGYUPvGpvHeHy5ao)
+* [Collected Data](https://zenodo.org/record/5568491)
 
 ---
 This repository uses the XGBoost, LightGBM and CatBoost algorithms, as well as Tensorflow.
