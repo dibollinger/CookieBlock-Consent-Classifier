@@ -1,5 +1,5 @@
 xgboost~=1.4.1
-numpy~=1.19.2
+numpy~=1.21
 pandas~=1.2.0
 scikit-learn~=0.24.1
 scipy~=1.6.1
@@ -14,4 +14,3 @@ tqdm~=4.59.0
 pyenchant~=3.2.0
 beautifulsoup4~=4.9.3
 Levenshtein~=0.15.0
-tensorflow==2.6.0
