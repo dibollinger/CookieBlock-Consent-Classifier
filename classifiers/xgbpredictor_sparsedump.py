@@ -1,9 +1,10 @@
-# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Copyright (C) 2021-2022 Dino Bollinger, ETH Zürich, Information Security Group
 # Released under the MIT License
 """
+TEST SCRIPT:
 Parses the new minimal format tree dumps and uses it to construct a predictor.
 Unlike the other script, this one does not utilize arrays, and instead expects dictionaries as feature input.
-This is done to prepare for the Javascript implementation.
+This is done to prepare for the Javascript implementation, and check the accuracy of the extracted model.
 
 Usage:
     xgbpredictor_sparsedump.py <dump_files>...

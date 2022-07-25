@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Copyright (C) 2021-2022 Dino Bollinger, ETH Zürich, Information Security Group
 # Released under the MIT License
 """
 Recompute the validation stats using the validation dataset that was split away during training.

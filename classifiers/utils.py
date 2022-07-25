@@ -1,5 +1,5 @@
-# Author: Dino Bollinger
-# License: MIT
+# Copyright (C) 2021-2022 Dino Bollinger, ETH Zürich, Information Security Group
+# Released under the MIT License
 from sklearn.datasets import load_svmlight_file
 from scipy.sparse import csr_matrix
 import pickle

@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Copyright (C) 2021-2022 Dino Bollinger, ETH Zürich, Information Security Group
 # Released under the MIT License
 """
 Requires a list of regexes that have been manually defined by a user.
@@ -52,4 +52,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     exit(main())
-

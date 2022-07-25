@@ -1,9 +1,10 @@
-# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Copyright (C) 2021-2022 Dino Bollinger, ETH Zürich, Information Security Group
 # Released under the MIT License
 """
-Iterates though an alphabetical list of unique cookie names, picks out those names that share a great degree of similarity in a contiguous sequence.
-This is used to determine cookie names that follow a certain pattern. After extraction, manual work is needed to determine which names
-out of the filtered list are truly pattern names, and additional work needs to be done to define a regex pattern for them.
+Iterates though an alphabetical list of unique cookie names, picks out those names that share a great
+degree of similarity in a contiguous sequence. This is used to determine cookie names that follow a
+certain pattern. After extraction, manual work is needed to determine which names out of the filtered
+list are truly pattern names, and additional work needs to be done to define a regex pattern for them.
 
 These pattern names are then used for the feature extraction.
 

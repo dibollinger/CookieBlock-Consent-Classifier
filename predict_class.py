@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Copyright (C) 2021-2022 Dino Bollinger, ETH Zürich, Information Security Group
 # Released under the MIT License
 """
 Using a pretrained model, and given cookie data in JSON format, predict labels for each cookie.

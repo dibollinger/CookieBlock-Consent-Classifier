@@ -1,6 +1,7 @@
-# Copyright (C) 2021 Dino Bollinger, ETH Zürich, Information Security Group
+# Copyright (C) 2021-2022 Dino Bollinger, ETH Zürich, Information Security Group
 # Released under the MIT License
 """
+TEST SCRIPT:
 Test script that uses the built-in "predict" function of the XGBoost model to make predictions.
 This is used for comparison purposes with the Tree-dump based implementation of the predictor
 The feature vector inputs are built into the code directly.
